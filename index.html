@@ -133,12 +133,12 @@ a.pt:hover{opacity:.7}
 <div class="hd fi-a">
 <div class="hd-l">
 <img class="logo" src="https://cdn.prod.website-files.com/6511d86dcc6ffe4be8b3e3c0/67a51d3a089fcce7d3a59514_2a1058a3dbdbabadadb72530baf47dea_oneononelearning.svg" alt="OOOL" onerror="this.style.display='none'">
-<div class="hd-t"><h1>Tutor Needs Dashboard</h1><p>Consolidated view across all programs — updated daily</p></div>
+<div class="hd-t"><h1>Tutor Needs Dashboard</h1></div>
 </div>
 <div class="hd-r">
 <span class="bdg bdg-live" id="statusBadge">Auto-Updated</span>
 <span class="bdg bdg-d" id="lastUpdated">—</span>
-<button class="rbtn" id="refreshBtn" onclick="loadData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>Refresh</button>
+
 </div>
 </div>
 <div class="eb" id="errorBanner"><span id="errorMsg"></span></div>
@@ -174,11 +174,11 @@ const DATA_URL='data.json',PCS_URL='pcs.json';
 let data=[],pcMap={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
 const progColors={},pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
 
+function xlDate(v){if(!v||v==='')return'';const s=String(v).trim();if(s.toLowerCase()==='asap')return'ASAP';if(/^\d{4,5}$/.test(s)){const d=new Date((parseInt(s)-25569)*86400000);return d.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'})}return s}
 function isUrgent(d){return(d.startDate||'').toString().toLowerCase().includes('asap')}
 function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');expandedRows.clear();renderTable()}
 
 async function loadData(){
-  const btn=document.getElementById('refreshBtn');btn.classList.add('spinning');
   document.getElementById('errorBanner').classList.remove('show');
   try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{
@@ -188,13 +188,13 @@ async function loadData(){
     else throw new Error('Bad format');
     data=data.map(d=>({
       program:d.program||d.Program||'',location:d.location||d.Location||'',school:d.school||d.School||'',
-      dateRequested:d.dateRequested||d['Date need Requested']||'',
+      dateRequested:xlDate(d.dateRequested||d['Date need Requested']||''),
       projected:parseInt(d.projected||d['Projected Tutors needed\nto start']||0),
       needed:parseInt(d.needed||d['Current # of tutors needed']||0),
       subject:d.subject||d['Grades/Subject']||'',mode:d.mode||d['In Person/Virtual']||'',
       mon:d.mon||d.Mon||'',tues:d.tues||d.Tues||'',wed:d.wed||d.Wed||'',
       thurs:d.thurs||d.Thurs||'',friday:d.friday||d.Friday||'',weekends:d.weekends||d.Weekends||'',
-      startDate:d.startDate||d['Start Date']||'',payRate:d.payRate||d['Pay Rate']||'',
+      startDate:xlDate(d.startDate||d['Start Date']||''),payRate:d.payRate||d['Pay Rate']||'',
       certified:d.certified||d['Certified?']||'',nonNeg:d.nonNeg||d['Non-Negotiables']||'',
       notes:d.notes||d['Notes/Experience']||'',fileUrl:d.fileUrl||''
     }));
@@ -203,10 +203,10 @@ async function loadData(){
       document.getElementById('lastUpdated').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     buildAll();
   }catch(e){if(data.length===0){loadSample();buildAll();document.getElementById('errorBanner').classList.add('show');document.getElementById('errorMsg').innerHTML='Showing <strong>sample data</strong> — connect Power Automate for live data.'}}
-  finally{btn.classList.remove('spinning');document.getElementById('lo').classList.add('h')}
+  finally{document.getElementById('lo').classList.add('h')}
 }
 
-function samplePCs(){return{"LACOE":"Susan M.","LAUSD":"Maria G.","Compton USD":"James R.","Inglewood USD":"Maria G.","Lynwood USD":"Susan M.","Centinela Valley":"James R.","Pasadena USD":"Ana L.","Arizona":"David K.","Pomona USD":"Ana L."}}
+function samplePCs(){return{"Arizona":"Christine","Arkansas":"Yesenia","LACOE":"Susan","LAUSD NP":"Ester","LAUSD Public":"Ester","LBUSD":"Karin","Pasadena":"Karin","Pomona":"Karin","Corona-Norco":"Karin","Riverside NP":"Amber","San Bernardino NP/ Fontana":"Amber","San Bernardino- Foster Youth / Probation":"Amber","Clark County":"Christine","Texas":"Yesenia","Sarasota":"James","Sumter County":"James","Broward County":"Malorie","Hillsborough":"Yesenia","Lake County":"Gretchen","Seminole":"Malorie","Lee County":"Eli","Leon County":"Yesenia","Marion County":"Yesenia","Miami Dade NP":"Margiet","Miami Public":"Cristy","Miami Dade Charter":"Katia","Miami Dade High Dosage":"Katia and Giselle","Osceola NP":"Gretchen","Orange County":"Saranda","Osceola Public":"Kelly","Pasco County":"James","West Palm":"Gabby","Louisiana":"Yesenia","Boston":"Eli","VA- Henrico":"Yesenia","Milwaukee":"Eli","Lake County Counselor":"Gayle","Miami IDEA Counselor":"Malorie"}}
 function loadSample(){
   pcMap=samplePCs();
   data=[
