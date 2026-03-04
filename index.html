@@ -10,107 +10,121 @@
 :root{--bg:#f4f6f9;--surface:rgba(255,255,255,0.55);--surface-hover:rgba(255,255,255,0.75);--border:rgba(255,255,255,0.6);--shadow:0 8px 32px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);--shadow-lg:0 16px 48px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);--text:#1a1f36;--text-dim:#6b7280;--text-light:#9ca3af;--red:#c8232c;--red-dim:rgba(200,35,44,0.08);--green:#2d8a4e;--green-dim:rgba(45,138,78,0.08);--navy:#1a1f36;--blue:#3b6eb5;--blue-dim:rgba(59,110,181,0.08);--amber:#d4930d;--amber-dim:rgba(212,147,13,0.08);--radius:20px;--radius-sm:12px;--blur:blur(20px) saturate(1.5)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;background:linear-gradient(160deg,#f0f2f6 0%,#e8edf5 30%,#f5f0ee 60%,#f2f4f7 100%);background-attachment:fixed}
-body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(80px);opacity:0.3;z-index:0;pointer-events:none}
-body::before{width:500px;height:500px;top:-100px;right:-100px;background:radial-gradient(circle,rgba(200,35,44,0.15),transparent 70%)}
-body::after{width:600px;height:600px;bottom:-150px;left:-150px;background:radial-gradient(circle,rgba(45,138,78,0.12),transparent 70%)}
-.pw{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:0 28px}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(80px);opacity:.3;z-index:0;pointer-events:none}
+body::before{width:500px;height:500px;top:-100px;right:-100px;background:radial-gradient(circle,rgba(200,35,44,.15),transparent 70%)}
+body::after{width:600px;height:600px;bottom:-150px;left:-150px;background:radial-gradient(circle,rgba(45,138,78,.12),transparent 70%)}
+.pw{position:relative;z-index:1;max-width:1900px;margin:0 auto;padding:0 36px}
 .glass{background:var(--surface);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius)}
-.lo{position:fixed;inset:0;background:rgba(244,246,249,0.95);backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity 0.5s}
+.lo{position:fixed;inset:0;background:rgba(244,246,249,.95);backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .5s}
 .lo.h{opacity:0;pointer-events:none}
 .sp{width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lo p{margin-top:14px;color:var(--text-dim);font-size:.88rem}
-.hd{padding:36px 0 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+
+/* Header */
+.hd{padding:32px 0 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
 .hd-l{display:flex;align-items:center;gap:20px}
-.logo{height:44px;width:auto;object-fit:contain}
-.hd-t h1{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:500;color:var(--navy);letter-spacing:-.01em;line-height:1.2}
-.hd-t p{color:var(--text-dim);font-size:.82rem;margin-top:2px}
+.logo{height:48px;width:auto;object-fit:contain}
+.hd-t h1{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:500;color:var(--navy);letter-spacing:-.01em;line-height:1.2}
+.hd-t p{color:var(--text-dim);font-size:.84rem;margin-top:2px}
 .hd-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .bdg{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;font-size:.75rem;font-weight:500;letter-spacing:.02em}
 .bdg-live{background:var(--green-dim);color:var(--green)}
 .bdg-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.bdg-d{background:rgba(0,0,0,0.04);color:var(--text-dim)}
-.rbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);background:var(--surface);backdrop-filter:var(--blur);color:var(--text-dim);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s}
-.rbtn:hover{background:var(--surface-hover);color:var(--red);border-color:rgba(200,35,44,0.2)}
+.bdg-d{background:rgba(0,0,0,.04);color:var(--text-dim)}
+.rbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;border:1px solid rgba(0,0,0,.08);background:var(--surface);backdrop-filter:var(--blur);color:var(--text-dim);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s}
+.rbtn:hover{background:var(--surface-hover);color:var(--red);border-color:rgba(200,35,44,.2)}
 .rbtn svg{width:13px;height:13px}
 .rbtn.spinning svg{animation:spin .6s linear infinite}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding-top:28px}
-@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding-top:28px}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.cards{grid-template-columns:1fr}}
-.card{padding:22px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.card{padding:24px 28px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s}
 .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
-.ci{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.ci{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
 .card:nth-child(1) .ci{background:var(--red-dim);color:var(--red)}
 .card:nth-child(2) .ci{background:var(--amber-dim);color:var(--amber)}
 .card:nth-child(3) .ci{background:var(--green-dim);color:var(--green)}
 .card:nth-child(4) .ci{background:var(--blue-dim);color:var(--blue)}
-.cl{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-.cv{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:500;margin-top:4px;line-height:1;color:var(--navy)}
-.cs{font-size:.76rem;color:var(--text-dim);margin-top:3px}
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:18px}
+.cl{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.cv{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:500;margin-top:6px;line-height:1;color:var(--navy)}
+.cs{font-size:.78rem;color:var(--text-dim);margin-top:4px}
+
+/* Charts */
+.charts{display:grid;grid-template-columns:1.4fr .6fr;gap:16px;padding-top:20px}
 @media(max-width:900px){.charts{grid-template-columns:1fr}}
-.cb{padding:24px}
-.cb h3{font-size:.78rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:18px}
-.cc{position:relative;height:280px}
-.ts{padding:18px 0 40px}
+.cb{padding:28px}
+.cb h3{font-size:.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:20px}
+.cc{position:relative;height:300px}
+.fill-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.fill-center .fill-pct{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:500;color:var(--navy);line-height:1}
+.fill-center .fill-label{font-size:.78rem;color:var(--text-dim);margin-top:2px}
+
+/* Table */
+.ts{padding:20px 0 48px}
 .tc{padding:0;overflow:hidden}
-.tt{display:flex;justify-content:space-between;align-items:center;padding:20px 24px 16px;flex-wrap:wrap;gap:12px}
-.tt h2{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:500;color:var(--navy)}
-.fl{display:flex;gap:8px;flex-wrap:wrap}
-.fs,.fi{background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.06);border-radius:100px;color:var(--text);font-family:inherit;font-size:.8rem;padding:7px 14px;outline:none;transition:all .2s;-webkit-appearance:none}
-.fs{padding-right:28px;cursor:pointer}
-.fs:focus,.fi:focus{border-color:var(--red);background:rgba(200,35,44,0.03)}
-.fi{width:180px}
+.tt{display:flex;justify-content:space-between;align-items:center;padding:22px 28px 18px;flex-wrap:wrap;gap:12px}
+.tt h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:500;color:var(--navy)}
+.fl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fs,.fi{background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.06);border-radius:100px;color:var(--text);font-family:inherit;font-size:.82rem;padding:8px 16px;outline:none;transition:all .2s;-webkit-appearance:none}
+.fs{padding-right:30px;cursor:pointer}
+.fs:focus,.fi:focus{border-color:var(--red);background:rgba(200,35,44,.03)}
+.fi{width:200px}
 .fi::placeholder{color:var(--text-light)}
-.tw{overflow-x:auto;max-height:600px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:.78rem}
-thead{background:rgba(0,0,0,0.025);position:sticky;top:0;z-index:2}
-th{text-align:left;padding:10px 10px;font-weight:600;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,0,0,0.05)}
+.view-toggle{display:flex;gap:0;border:1px solid rgba(0,0,0,.08);border-radius:100px;overflow:hidden}
+.vt-btn{padding:8px 16px;border:none;background:transparent;font-family:inherit;font-size:.8rem;font-weight:500;color:var(--text-dim);cursor:pointer;transition:all .2s}
+.vt-btn.active{background:var(--navy);color:#fff}
+.tw{overflow-x:auto;max-height:650px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead{background:rgba(0,0,0,.025);position:sticky;top:0;z-index:2}
+th{text-align:left;padding:12px 14px;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,0,0,.05)}
 th:hover{color:var(--red)}
 th .sa{margin-left:2px;opacity:.3;font-size:.6rem}
 th.sorted .sa{opacity:1;color:var(--red)}
-td{padding:8px 10px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--text);vertical-align:top}
+td{padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.04);color:var(--text);vertical-align:top}
 tr:last-child td{border-bottom:none}
 tbody tr{transition:background .15s}
-tbody tr:hover{background:rgba(200,35,44,0.02)}
-.pt{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:600;letter-spacing:.02em;text-decoration:none;transition:opacity .2s}
+tbody tr:hover{background:rgba(200,35,44,.02)}
+tr.urgent-row{background:rgba(200,35,44,.03)}
+tr.urgent-row:hover{background:rgba(200,35,44,.06)}
+.pt{display:inline-block;padding:4px 12px;border-radius:100px;font-size:.74rem;font-weight:600;letter-spacing:.02em;text-decoration:none;transition:opacity .2s}
 a.pt:hover{opacity:.7}
+.pc-cell{font-size:.78rem;color:var(--text-dim)}
 .nh{color:var(--red);font-weight:700}
 .nm{color:var(--amber);font-weight:700}
 .nl{color:var(--green);font-weight:700}
-.mb{display:inline-block;padding:3px 8px;border-radius:100px;font-size:.68rem;font-weight:600}
+.mb{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:600}
 .m-ip{background:var(--blue-dim);color:var(--blue)}
 .m-v{background:var(--green-dim);color:var(--green)}
-.sched{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:2px;min-width:0}
-.sd{font-size:.65rem;text-align:center;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,0.025);line-height:1.2}
+.urgent-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:.7rem;font-weight:600;background:var(--red-dim);color:var(--red)}
+.sched{display:inline-flex;gap:3px;flex-wrap:wrap}
+.sd{font-size:.68rem;text-align:center;padding:3px 5px;border-radius:5px;line-height:1.2;min-width:38px}
 .sd-label{font-weight:600;color:var(--text-dim);font-size:.6rem;text-transform:uppercase}
-.sd-time{color:var(--text);font-size:.64rem;margin-top:1px}
+.sd-time{color:var(--text);font-size:.66rem;margin-top:1px}
 .sd-yes{background:var(--green-dim);color:var(--green)}
-.sd-no{background:transparent;color:var(--text-light)}
-.cert-y{color:var(--green);font-weight:600;font-size:.72rem}
-.cert-n{color:var(--text-light);font-size:.72rem}
-.notes-cell{max-width:180px;white-space:normal;font-size:.74rem;line-height:1.35;color:var(--text-dim)}
-.expand-btn{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.72rem;font-weight:500;padding:2px 0;font-family:inherit}
+.sd-no{display:none}
+.cert-y{color:var(--green);font-weight:600;font-size:.76rem}
+.cert-n{color:var(--text-light);font-size:.76rem}
+.notes-cell{max-width:200px;white-space:normal;font-size:.78rem;line-height:1.4;color:var(--text-dim)}
+.expand-btn{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.76rem;font-weight:500;padding:2px 0;font-family:inherit}
 .expand-btn:hover{text-decoration:underline}
-.detail-row td{padding:12px 16px;background:rgba(59,110,181,0.02)}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;font-size:.78rem}
-.detail-grid .dg-label{font-size:.65rem;text-transform:uppercase;color:var(--text-dim);font-weight:600;letter-spacing:.04em;margin-bottom:2px}
+.detail-row td{padding:14px 20px;background:rgba(59,110,181,.02)}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;font-size:.82rem}
+.detail-grid .dg-label{font-size:.67rem;text-transform:uppercase;color:var(--text-dim);font-weight:600;letter-spacing:.04em;margin-bottom:2px}
 .detail-grid .dg-val{color:var(--text)}
-.pc-tag{display:inline-block;padding:2px 8px;border-radius:100px;font-size:.68rem;font-weight:500;background:rgba(0,0,0,0.04);color:var(--text-dim);margin-left:4px}
 .es{text-align:center;padding:60px 24px;color:var(--text-dim)}
 .es h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text);margin-bottom:6px}
-.rc{font-size:.76rem;color:var(--text-light);padding:10px 24px 16px;text-align:right}
-.eb{margin-top:16px;padding:14px 18px;background:var(--red-dim);border:1px solid rgba(200,35,44,0.12);border-radius:var(--radius-sm);color:var(--red);font-size:.84rem;display:none}
+.rc{font-size:.78rem;color:var(--text-light);padding:12px 28px 18px;text-align:right}
+.eb{margin-top:16px;padding:14px 18px;background:var(--red-dim);border:1px solid rgba(200,35,44,.12);border-radius:var(--radius-sm);color:var(--red);font-size:.84rem;display:none}
 .eb.show{display:flex;align-items:center;gap:10px}
-.ft{text-align:center;padding:12px 0 36px;color:var(--text-light);font-size:.7rem;letter-spacing:.03em}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:3px}
+.ft{text-align:center;padding:16px 0 40px;color:var(--text-light);font-size:.72rem;letter-spacing:.03em}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}
 .fi-a{animation:fadeIn .6s ease forwards;opacity:0}
 @keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:640px){.pw{padding:0 14px}.hd-t h1{font-size:1.3rem}.logo{height:36px}}
-.view-toggle{display:flex;gap:0;border:1px solid rgba(0,0,0,0.08);border-radius:100px;overflow:hidden;margin-left:8px}
-.vt-btn{padding:7px 14px;border:none;background:transparent;font-family:inherit;font-size:.78rem;font-weight:500;color:var(--text-dim);cursor:pointer;transition:all .2s}
-.vt-btn.active{background:var(--navy);color:#fff}
+@media(max-width:640px){.pw{padding:0 16px}.hd-t h1{font-size:1.3rem}.logo{height:38px}}
 </style>
 </head>
 <body>
@@ -131,23 +145,23 @@ a.pt:hover{opacity:.7}
 <div class="cards fi-a" style="animation-delay:.1s" id="summaryCards"></div>
 <div class="charts fi-a" style="animation-delay:.2s">
 <div class="cb glass"><h3>Tutors Needed by Program</h3><div class="cc"><canvas id="chartProgram"></canvas></div></div>
-<div class="cb glass"><h3>Projected vs Actual Needs</h3><div class="cc"><canvas id="chartCompare"></canvas></div></div>
+<div class="cb glass"><h3>Overall Fill Rate</h3><div class="cc"><canvas id="chartFill"></canvas><div class="fill-center" id="fillCenter"></div></div></div>
 </div>
 <div class="ts fi-a" style="animation-delay:.3s">
 <div class="tc glass">
 <div class="tt">
-<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
 <h2>All Open Positions</h2>
 <div class="view-toggle">
-<button class="vt-btn active" onclick="setView('compact',this)">Compact</button>
-<button class="vt-btn" onclick="setView('full',this)">Full Detail</button>
+<button class="vt-btn" onclick="setView('compact',this)">Compact</button>
+<button class="vt-btn active" onclick="setView('full',this)">Full Detail</button>
 </div>
 </div>
 <div class="fl">
 <input class="fi" type="text" id="searchInput" placeholder="Search...">
 <select class="fs" id="filterProgram"><option value="">All Programs</option></select>
 <select class="fs" id="filterPC"><option value="">All PCs</option></select>
-<select class="fs" id="filterMode"><option value="">All Modes</option><option value="In Person">In Person</option><option value="Virtual">Virtual</option></select>
+<select class="fs" id="filterUrgent"><option value="">All Priorities</option><option value="asap">ASAP Only</option></select>
 </div>
 </div>
 <div class="tw"><table><thead><tr id="tableHead"></tr></thead><tbody id="tableBody"></tbody></table></div>
@@ -156,81 +170,63 @@ a.pt:hover{opacity:.7}
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
 </div>
 <script>
-const DATA_URL='data.json';
-const PCS_URL='pcs.json';
-let data=[],pcMap={},sortCol=null,sortAsc=true,viewMode='compact',expandedRows=new Set();
-const progColors={};
-const pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
+const DATA_URL='data.json',PCS_URL='pcs.json';
+let data=[],pcMap={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
+const progColors={},pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
 
-function setView(mode,btn){viewMode=mode;document.querySelectorAll('.vt-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');expandedRows.clear();renderTable()}
+function isUrgent(d){return(d.startDate||'').toString().toLowerCase().includes('asap')}
+function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');expandedRows.clear();renderTable()}
 
 async function loadData(){
   const btn=document.getElementById('refreshBtn');btn.classList.add('spinning');
   document.getElementById('errorBanner').classList.remove('show');
-
-  // Load PC mapping
-  try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=getSamplePCs()}
-
-  // Load main data
+  try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{
-    const r=await fetch(DATA_URL+'?t='+Date.now());
-    if(!r.ok)throw new Error('HTTP '+r.status);
+    const r=await fetch(DATA_URL+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
-    if(Array.isArray(j))data=j;
-    else if(j.records){data=j.records;if(j.updated)document.getElementById('lastUpdated').textContent=j.updated}
-    else throw new Error('Unexpected format');
+    if(Array.isArray(j))data=j;else if(j.records){data=j.records;if(j.updated)document.getElementById('lastUpdated').textContent=j.updated}
+    else throw new Error('Bad format');
     data=data.map(d=>({
-      program:d.program||d.Program||'',
-      location:d.location||d.Location||'',
-      school:d.school||d.School||'',
+      program:d.program||d.Program||'',location:d.location||d.Location||'',school:d.school||d.School||'',
       dateRequested:d.dateRequested||d['Date need Requested']||'',
       projected:parseInt(d.projected||d['Projected Tutors needed\nto start']||0),
       needed:parseInt(d.needed||d['Current # of tutors needed']||0),
-      subject:d.subject||d['Grades/Subject']||'',
-      mode:d.mode||d['In Person/Virtual']||'',
+      subject:d.subject||d['Grades/Subject']||'',mode:d.mode||d['In Person/Virtual']||'',
       mon:d.mon||d.Mon||'',tues:d.tues||d.Tues||'',wed:d.wed||d.Wed||'',
       thurs:d.thurs||d.Thurs||'',friday:d.friday||d.Friday||'',weekends:d.weekends||d.Weekends||'',
-      startDate:d.startDate||d['Start Date']||'',
-      payRate:d.payRate||d['Pay Rate']||'',
-      certified:d.certified||d['Certified?']||'',
-      nonNeg:d.nonNeg||d['Non-Negotiables']||'',
-      notes:d.notes||d['Notes/Experience']||'',
-      fileUrl:d.fileUrl||''
+      startDate:d.startDate||d['Start Date']||'',payRate:d.payRate||d['Pay Rate']||'',
+      certified:d.certified||d['Certified?']||'',nonNeg:d.nonNeg||d['Non-Negotiables']||'',
+      notes:d.notes||d['Notes/Experience']||'',fileUrl:d.fileUrl||''
     }));
-    // Attach PC to each record
     data.forEach(d=>{d.pc=pcMap[d.program]||''});
     if(!document.getElementById('lastUpdated').textContent||document.getElementById('lastUpdated').textContent==='—')
       document.getElementById('lastUpdated').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     buildAll();
-  }catch(e){
-    if(data.length===0){loadSample();buildAll();
-      document.getElementById('errorBanner').classList.add('show');
-      document.getElementById('errorMsg').innerHTML='Showing <strong>sample data</strong> — connect Power Automate to see live data.';}
-  }finally{btn.classList.remove('spinning');document.getElementById('lo').classList.add('h')}
+  }catch(e){if(data.length===0){loadSample();buildAll();document.getElementById('errorBanner').classList.add('show');document.getElementById('errorMsg').innerHTML='Showing <strong>sample data</strong> — connect Power Automate for live data.'}}
+  finally{btn.classList.remove('spinning');document.getElementById('lo').classList.add('h')}
 }
 
-function getSamplePCs(){return{"LACOE":"Susan M.","LAUSD":"Maria G.","Compton USD":"James R.","Inglewood USD":"Maria G.","Lynwood USD":"Susan M.","Centinela Valley":"James R.","Pasadena USD":"Ana L.","Arizona":"David K.","Pomona USD":"Ana L."}}
-
+function samplePCs(){return{"LACOE":"Susan M.","LAUSD":"Maria G.","Compton USD":"James R.","Inglewood USD":"Maria G.","Lynwood USD":"Susan M.","Centinela Valley":"James R.","Pasadena USD":"Ana L.","Arizona":"David K.","Pomona USD":"Ana L."}}
 function loadSample(){
-  pcMap=getSamplePCs();
+  pcMap=samplePCs();
   data=[
-    {program:"LACOE",location:"Lynwood, CA",school:"Challenger Memorial Youth Center",dateRequested:"10/8/2025",projected:2,needed:2,subject:"ELA & Math",mode:"In Person",mon:"8:00-2:30",tues:"8:00-2:30",wed:"8:00-2:30",thurs:"8:00-2:30",friday:"",weekends:"",startDate:"ASAP",payRate:"$22/hr",certified:"Yes",nonNeg:"Must have CA sub permit",notes:"Prefer bilingual",fileUrl:""},
-    {program:"LACOE",location:"Downey, CA",school:"Dorothy Kirby Center",dateRequested:"10/8/2025",projected:3,needed:1,subject:"ELA & Math",mode:"In Person",mon:"9:00-3:00",tues:"9:00-3:00",wed:"9:00-3:00",thurs:"9:00-3:00",friday:"9:00-3:00",weekends:"",startDate:"ASAP",payRate:"$22/hr",certified:"No",nonNeg:"",notes:"Experience with at-risk youth",fileUrl:""},
-    {program:"LACOE",location:"Sylmar, CA",school:"Barry J. Nidorf",dateRequested:"11/1/2025",projected:4,needed:3,subject:"Math",mode:"In Person",mon:"8:30-1:30",tues:"",wed:"8:30-1:30",thurs:"",friday:"8:30-1:30",weekends:"",startDate:"11/15/2025",payRate:"$22/hr",certified:"Yes",nonNeg:"Livescan required",notes:"Juvenile facility clearance",fileUrl:""},
-    {program:"LAUSD",location:"Los Angeles, CA",school:"Fremont HS",dateRequested:"9/15/2025",projected:5,needed:3,subject:"Algebra I & II",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"10/1/2025",payRate:"$20/hr",certified:"Yes",nonNeg:"LAUSD cleared",notes:"",fileUrl:""},
+    {program:"LACOE",location:"Lynwood, CA",school:"Challenger Memorial Youth Center",dateRequested:"10/8/2025",projected:2,needed:2,subject:"ELA & Math",mode:"In Person",mon:"8:00-2:30",tues:"8:00-2:30",wed:"8:00-2:30",thurs:"8:00-2:30",friday:"",weekends:"",startDate:"ASAP",payRate:"$22/hr",certified:"Yes",nonNeg:"CA sub permit",notes:"Prefer bilingual",fileUrl:""},
+    {program:"LACOE",location:"Downey, CA",school:"Dorothy Kirby Center",dateRequested:"10/8/2025",projected:3,needed:1,subject:"ELA & Math",mode:"In Person",mon:"9:00-3:00",tues:"9:00-3:00",wed:"9:00-3:00",thurs:"9:00-3:00",friday:"9:00-3:00",weekends:"",startDate:"ASAP",payRate:"$22/hr",certified:"No",nonNeg:"",notes:"At-risk youth exp preferred",fileUrl:""},
+    {program:"LACOE",location:"Sylmar, CA",school:"Barry J. Nidorf",dateRequested:"11/1/2025",projected:4,needed:3,subject:"Math",mode:"In Person",mon:"8:30-1:30",tues:"",wed:"8:30-1:30",thurs:"",friday:"8:30-1:30",weekends:"",startDate:"11/15/2025",payRate:"$22/hr",certified:"Yes",nonNeg:"Livescan",notes:"Juvenile facility clearance",fileUrl:""},
+    {program:"LAUSD",location:"Los Angeles, CA",school:"Fremont HS",dateRequested:"9/15/2025",projected:5,needed:3,subject:"Algebra I & II",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"ASAP",payRate:"$20/hr",certified:"Yes",nonNeg:"LAUSD cleared",notes:"",fileUrl:""},
     {program:"LAUSD",location:"Los Angeles, CA",school:"Jefferson MS",dateRequested:"9/20/2025",projected:3,needed:2,subject:"ELA 7th & 8th",mode:"In Person",mon:"x",tues:"",wed:"x",thurs:"",friday:"x",weekends:"",startDate:"10/7/2025",payRate:"$20/hr",certified:"No",nonNeg:"",notes:"After school 3-5pm",fileUrl:""},
     {program:"LAUSD",location:"Los Angeles, CA",school:"Manual Arts HS",dateRequested:"10/1/2025",projected:4,needed:4,subject:"Chemistry & Physics",mode:"In Person",mon:"7:30-2:00",tues:"7:30-2:00",wed:"",thurs:"7:30-2:00",friday:"7:30-2:00",weekends:"",startDate:"10/15/2025",payRate:"$20/hr",certified:"Yes",nonNeg:"Science credential",notes:"AP classes",fileUrl:""},
-    {program:"Compton USD",location:"Compton, CA",school:"Compton HS",dateRequested:"10/5/2025",projected:3,needed:3,subject:"ELA & Math",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"10/14/2025",payRate:"$21/hr",certified:"No",nonNeg:"Bilingual Spanish",notes:"Title I",fileUrl:""},
+    {program:"Compton USD",location:"Compton, CA",school:"Compton HS",dateRequested:"10/5/2025",projected:3,needed:3,subject:"ELA & Math",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"ASAP",payRate:"$21/hr",certified:"No",nonNeg:"Bilingual Spanish",notes:"Title I",fileUrl:""},
     {program:"Compton USD",location:"Compton, CA",school:"Whaley MS",dateRequested:"10/12/2025",projected:2,needed:1,subject:"Math 7th",mode:"Virtual",mon:"",tues:"",wed:"3:30-5:00",thurs:"",friday:"3:30-5:00",weekends:"",startDate:"10/28/2025",payRate:"$21/hr",certified:"No",nonNeg:"",notes:"Virtual after school",fileUrl:""},
     {program:"Inglewood USD",location:"Inglewood, CA",school:"Inglewood HS",dateRequested:"10/8/2025",projected:4,needed:2,subject:"Algebra I",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"x",weekends:"",startDate:"10/20/2025",payRate:"$20/hr",certified:"Yes",nonNeg:"",notes:"",fileUrl:""},
     {program:"Lynwood USD",location:"Lynwood, CA",school:"Lynwood HS",dateRequested:"9/28/2025",projected:3,needed:1,subject:"Biology",mode:"In Person",mon:"",tues:"8:00-12:00",wed:"",thurs:"8:00-12:00",friday:"",weekends:"",startDate:"10/7/2025",payRate:"$20/hr",certified:"Yes",nonNeg:"Bio credential",notes:"Lab support",fileUrl:""},
-    {program:"Lynwood USD",location:"Lynwood, CA",school:"Hosler MS",dateRequested:"10/20/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",mon:"x",tues:"",wed:"x",thurs:"",friday:"x",weekends:"",startDate:"11/3/2025",payRate:"$20/hr",certified:"No",nonNeg:"",notes:"",fileUrl:""},
+    {program:"Lynwood USD",location:"Lynwood, CA",school:"Hosler MS",dateRequested:"10/20/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",mon:"x",tues:"",wed:"x",thurs:"",friday:"x",weekends:"",startDate:"ASAP",payRate:"$20/hr",certified:"No",nonNeg:"",notes:"",fileUrl:""},
     {program:"Centinela Valley",location:"Hawthorne, CA",school:"Hawthorne HS",dateRequested:"10/3/2025",projected:2,needed:2,subject:"Geometry",mode:"In Person",mon:"x",tues:"x",wed:"",thurs:"x",friday:"",weekends:"",startDate:"10/14/2025",payRate:"$21/hr",certified:"No",nonNeg:"",notes:"",fileUrl:""},
     {program:"Centinela Valley",location:"Lawndale, CA",school:"Lawndale HS",dateRequested:"10/18/2025",projected:3,needed:1,subject:"ELA 9th & 10th",mode:"Virtual",mon:"",tues:"4:00-6:00",wed:"",thurs:"4:00-6:00",friday:"",weekends:"",startDate:"11/1/2025",payRate:"$21/hr",certified:"No",nonNeg:"",notes:"Evening virtual",fileUrl:""},
     {program:"Pasadena USD",location:"Pasadena, CA",school:"Pasadena HS",dateRequested:"10/10/2025",projected:4,needed:2,subject:"AP Calculus",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"10/21/2025",payRate:"$23/hr",certified:"Yes",nonNeg:"Math credential",notes:"AP exam prep",fileUrl:""},
-    {program:"Arizona",location:"Phoenix, AZ",school:"Camelback HS",dateRequested:"10/15/2025",projected:3,needed:3,subject:"Math & Reading",mode:"In Person",mon:"8:00-2:00",tues:"8:00-2:00",wed:"8:00-2:00",thurs:"8:00-2:00",friday:"",weekends:"",startDate:"11/1/2025",payRate:"$19/hr",certified:"No",nonNeg:"AZ fingerprint card",notes:"Mostly 9th graders",fileUrl:""},
+    {program:"Arizona",location:"Phoenix, AZ",school:"Camelback HS",dateRequested:"10/15/2025",projected:3,needed:3,subject:"Math & Reading",mode:"In Person",mon:"8:00-2:00",tues:"8:00-2:00",wed:"8:00-2:00",thurs:"8:00-2:00",friday:"",weekends:"",startDate:"ASAP",payRate:"$19/hr",certified:"No",nonNeg:"AZ fingerprint card",notes:"Mostly 9th graders",fileUrl:""},
     {program:"Arizona",location:"Tempe, AZ",school:"McClintock HS",dateRequested:"10/20/2025",projected:2,needed:2,subject:"ELA",mode:"Virtual",mon:"",tues:"3:00-5:00",wed:"",thurs:"3:00-5:00",friday:"",weekends:"",startDate:"11/5/2025",payRate:"$19/hr",certified:"No",nonNeg:"",notes:"After school virtual",fileUrl:""},
-    {program:"Pomona USD",location:"Pomona, CA",school:"Pomona HS",dateRequested:"10/14/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"10/28/2025",payRate:"$20/hr",certified:"No",nonNeg:"Bilingual",notes:"Title I",fileUrl:""},
+    {program:"Pomona USD",location:"Pomona, CA",school:"Pomona HS",dateRequested:"10/14/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"ASAP",payRate:"$20/hr",certified:"No",nonNeg:"Bilingual",notes:"Title I",fileUrl:""},
   ];
   data.forEach(d=>{d.pc=pcMap[d.program]||''});
   document.getElementById('lastUpdated').textContent='Sample Data';
@@ -247,63 +243,45 @@ function buildAll(){
 function buildCards(){
   const tn=data.reduce((s,d)=>s+d.needed,0),tp=data.reduce((s,d)=>s+d.projected,0),
     pr=[...new Set(data.map(d=>d.program))],lo=[...new Set(data.map(d=>d.school))],
-    ur=data.filter(d=>d.needed>=3).length,
-    pcs=[...new Set(Object.values(pcMap))].length;
+    urgCnt=data.filter(d=>isUrgent(d)).length,
+    pcs=[...new Set(Object.values(pcMap))].filter(Boolean).length,
+    fillPct=tp?Math.round((tp-tn)/tp*100):0;
   document.getElementById('summaryCards').innerHTML=
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="cl">Total Tutors Needed</div><div class="cv">${tn}</div><div class="cs">of ${tp} projected</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">Urgent (3+)</div><div class="cv">${ur}</div><div class="cs">high-demand locations</div></div>`+
+    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="cl">Active Programs</div><div class="cv">${pr.length}</div><div class="cs">${lo.length} schools &middot; ${pcs} PCs</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${tp?Math.round((tp-tn)/tp*100):0}%</div><div class="cs">${tp-tn} of ${tp} positions filled</div></div>`;
+    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${fillPct}%</div><div class="cs">${tp-tn} of ${tp} filled</div></div>`;
 }
 
-let chP,chC;
+let chP,chF;
 function buildCharts(){
-  const pr=[...new Set(data.map(d=>d.program))],
-    pn=pr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0)),
-    co=pr.map(p=>progColors[p]);
+  const pr=[...new Set(data.map(d=>d.program))],pn=pr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0)),co=pr.map(p=>progColors[p]);
   if(chP)chP.destroy();
-  chP=new Chart(document.getElementById('chartProgram').getContext('2d'),{type:'bar',data:{labels:pr,datasets:[{data:pn,backgroundColor:co.map(c=>c+'22'),borderColor:co,borderWidth:1.5,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9ca3af',font:{size:10,family:'Inter'}},grid:{display:false},border:{display:false}},y:{ticks:{color:'#9ca3af',font:{size:10},stepSize:2},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},beginAtZero:true}}}});
+  chP=new Chart(document.getElementById('chartProgram').getContext('2d'),{type:'bar',data:{labels:pr,datasets:[{data:pn,backgroundColor:co.map(c=>c+'22'),borderColor:co,borderWidth:1.5,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9ca3af',font:{size:10,family:'Inter'}},grid:{display:false},border:{display:false}},y:{ticks:{color:'#9ca3af',font:{size:10},stepSize:2},grid:{color:'rgba(0,0,0,.04)'},border:{display:false},beginAtZero:true}}}});
 
-  // Projected vs Actual chart
-  const projected=pr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.projected,0));
-  const actual=pr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0));
-  if(chC)chC.destroy();
-  chC=new Chart(document.getElementById('chartCompare').getContext('2d'),{
-    type:'bar',
-    data:{
-      labels:pr,
-      datasets:[
-        {label:'Projected',data:projected,backgroundColor:'rgba(59,110,181,0.18)',borderColor:'#3b6eb5',borderWidth:1.5,borderRadius:8},
-        {label:'Still Needed',data:actual,backgroundColor:'rgba(200,35,44,0.18)',borderColor:'#c8232c',borderWidth:1.5,borderRadius:8}
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:11,family:'Inter'},padding:14,usePointStyle:true,pointStyleWidth:10}}},
-      scales:{
-        x:{ticks:{color:'#9ca3af',font:{size:10,family:'Inter'}},grid:{display:false},border:{display:false}},
-        y:{ticks:{color:'#9ca3af',font:{size:10},stepSize:2},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},beginAtZero:true}
-      }
-    }
+  // Fill rate doughnut
+  const tp=data.reduce((s,d)=>s+d.projected,0),tn=data.reduce((s,d)=>s+d.needed,0),filled=tp-tn,pct=tp?Math.round(filled/tp*100):0;
+  if(chF)chF.destroy();
+  chF=new Chart(document.getElementById('chartFill').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Filled','Still Needed'],datasets:[{data:[filled,tn],backgroundColor:['rgba(45,138,78,.25)','rgba(200,35,44,.2)'],borderColor:['#2d8a4e','#c8232c'],borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'75%',plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:11,family:'Inter'},padding:14,usePointStyle:true,pointStyleWidth:10}}}}
   });
+  document.getElementById('fillCenter').innerHTML=`<div class="fill-pct">${pct}%</div><div class="fill-label">${filled} of ${tp} filled</div>`;
 }
 
 function buildFilters(){
-  const pr=[...new Set(data.map(d=>d.program))].sort();
-  const s=document.getElementById('filterProgram'),c=s.value;
+  const pr=[...new Set(data.map(d=>d.program))].sort(),s=document.getElementById('filterProgram'),c=s.value;
   s.innerHTML='<option value="">All Programs</option>'+pr.map(p=>`<option value="${p}">${p}</option>`).join('');s.value=c;
-
-  // Build PC filter
-  const pcs=[...new Set(Object.values(pcMap))].filter(Boolean).sort();
-  const ps=document.getElementById('filterPC'),pc=ps.value;
+  const pcs=[...new Set(Object.values(pcMap))].filter(Boolean).sort(),ps=document.getElementById('filterPC'),pc=ps.value;
   ps.innerHTML='<option value="">All PCs</option>'+pcs.map(p=>`<option value="${p}">${p}</option>`).join('');ps.value=pc;
 }
 document.getElementById('searchInput').addEventListener('input',renderTable);
 document.getElementById('filterProgram').addEventListener('change',renderTable);
 document.getElementById('filterPC').addEventListener('change',renderTable);
-document.getElementById('filterMode').addEventListener('change',renderTable);
+document.getElementById('filterUrgent').addEventListener('change',renderTable);
 
-function formatSchedule(d){
+function fmtSched(d){
   const days=[{k:'mon',l:'Mon'},{k:'tues',l:'Tue'},{k:'wed',l:'Wed'},{k:'thurs',l:'Thu'},{k:'friday',l:'Fri'},{k:'weekends',l:'Wknd'}];
   let html='<div class="sched">';
   for(const day of days){
@@ -311,37 +289,18 @@ function formatSchedule(d){
     if(v&&v.toString().trim()&&v.toString().trim()!=='0'){
       const isTime=v.toString().includes(':');
       html+=`<div class="sd sd-yes"><div class="sd-label">${day.l}</div><div class="sd-time">${isTime?v:'✓'}</div></div>`;
-    }else{
-      html+=`<div class="sd sd-no"><div class="sd-label" style="opacity:.4">${day.l}</div><div class="sd-time">—</div></div>`;
     }
   }
   return html+'</div>';
 }
+function fmtCert(v){if(!v)return'<span class="cert-n">—</span>';const s=v.toString().toLowerCase();if(s==='yes'||s==='y')return'<span class="cert-y">Yes</span>';if(s==='no'||s==='n')return'<span class="cert-n">No</span>';return`<span class="cert-n">${v}</span>`}
+function fmtStart(d){if(isUrgent(d))return'<span class="urgent-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>ASAP</span>';return d.startDate||'—'}
 
-function formatCert(v){if(!v)return'<span class="cert-n">—</span>';const s=v.toString().toLowerCase();if(s==='yes'||s==='y')return'<span class="cert-y">Yes</span>';if(s==='no'||s==='n')return'<span class="cert-n">No</span>';return`<span class="cert-n">${v}</span>`}
-
-const compactCols=[
-  {key:'program',label:'Program'},{key:'school',label:'School'},{key:'location',label:'Location'},
-  {key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},
-  {key:'schedule',label:'Schedule'},{key:'certified',label:'Cert'},{key:'startDate',label:'Start'},
-  {key:'payRate',label:'Pay'},{key:'expand',label:''}
-];
-const fullCols=[
-  {key:'program',label:'Program'},{key:'school',label:'School'},{key:'location',label:'Location'},
-  {key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},
-  {key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},
-  {key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},
-  {key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}
-];
+const compactCols=[{key:'program',label:'Program'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
+const fullCols=[{key:'program',label:'Program'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
 function getCols(){return viewMode==='compact'?compactCols:fullCols}
 
-function buildTableHead(){
-  const cols=getCols();
-  document.getElementById('tableHead').innerHTML=cols.map(c=>{
-    if(c.key==='expand'||c.key==='schedule')return`<th>${c.label}</th>`;
-    return`<th class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sa">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`;
-  }).join('');
-}
+function buildTableHead(){document.getElementById('tableHead').innerHTML=getCols().map(c=>{if(c.key==='expand'||c.key==='schedule')return`<th>${c.label}</th>`;return`<th class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sa">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`}).join('')}
 function sortTable(k){if(sortCol===k)sortAsc=!sortAsc;else{sortCol=k;sortAsc=true}renderTable()}
 function toggleRow(i){if(expandedRows.has(i))expandedRows.delete(i);else expandedRows.add(i);renderTable()}
 
@@ -349,11 +308,11 @@ function renderTable(){
   const s=document.getElementById('searchInput').value.toLowerCase(),
     pf=document.getElementById('filterProgram').value,
     pcf=document.getElementById('filterPC').value,
-    mf=document.getElementById('filterMode').value;
+    uf=document.getElementById('filterUrgent').value;
   let f=data.filter(d=>{
     if(pf&&d.program!==pf)return false;
     if(pcf&&d.pc!==pcf)return false;
-    if(mf&&!d.mode.toLowerCase().includes(mf.toLowerCase()))return false;
+    if(uf==='asap'&&!isUrgent(d))return false;
     if(s){const h=(d.location+d.school+d.subject+d.program+d.notes+d.nonNeg+d.pc).toLowerCase();if(!h.includes(s))return false}
     return true;
   });
@@ -361,61 +320,45 @@ function renderTable(){
   buildTableHead();
   const tb=document.getElementById('tableBody'),cols=getCols();
   if(f.length===0){tb.innerHTML=`<tr><td colspan="${cols.length}"><div class="es"><h3>No matching records</h3><p style="color:var(--text-dim);font-size:.85rem">Try adjusting your filters</p></div></td></tr>`;document.getElementById('rowCount').textContent='';return}
-
   let html='';
   f.forEach((d,i)=>{
-    const nc=d.needed>=3?'nh':d.needed>=2?'nm':'nl';
-    const mc=d.mode.toLowerCase().includes('virtual')?'m-v':'m-ip';
-    const c=progColors[d.program]||'#c8232c';
-    const ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`;
-    const pcBadge=d.pc?`<span class="pc-tag">${d.pc}</span>`:'';
-
+    const nc=d.needed>=3?'nh':d.needed>=2?'nm':'nl',
+      mc=d.mode.toLowerCase().includes('virtual')?'m-v':'m-ip',
+      c=progColors[d.program]||'#c8232c',urg=isUrgent(d),
+      ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`;
     if(viewMode==='compact'){
-      html+=`<tr>`;
-      html+=`<td>${ptag}${pcBadge}</td>`;
-      html+=`<td style="font-weight:500">${d.school||'—'}</td>`;
-      html+=`<td>${d.location||'—'}</td>`;
-      html+=`<td class="${nc}">${d.needed}</td>`;
-      html+=`<td>${d.subject||'—'}</td>`;
-      html+=`<td><span class="mb ${mc}">${d.mode||'—'}</span></td>`;
-      html+=`<td style="min-width:200px">${formatSchedule(d)}</td>`;
-      html+=`<td>${formatCert(d.certified)}</td>`;
-      html+=`<td>${d.startDate||'—'}</td>`;
-      html+=`<td>${d.payRate||'—'}</td>`;
-      html+=`<td><button class="expand-btn" onclick="toggleRow(${i})">${expandedRows.has(i)?'Less':'More'}</button></td>`;
-      html+=`</tr>`;
+      html+=`<tr${urg?' class="urgent-row"':''}>`;
+      html+=`<td>${ptag}</td><td class="pc-cell">${d.pc||'—'}</td>`;
+      html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
+      html+=`<td class="${nc}">${d.needed}</td><td>${d.subject||'—'}</td>`;
+      html+=`<td style="min-width:180px">${fmtSched(d)}</td>`;
+      html+=`<td>${fmtStart(d)}</td><td>${d.payRate||'—'}</td>`;
+      html+=`<td><button class="expand-btn" onclick="toggleRow(${i})">${expandedRows.has(i)?'Less':'More'}</button></td></tr>`;
       if(expandedRows.has(i)){
         html+=`<tr class="detail-row"><td colspan="${cols.length}"><div class="detail-grid">`;
         html+=`<div><div class="dg-label">Date Requested</div><div class="dg-val">${d.dateRequested||'—'}</div></div>`;
         html+=`<div><div class="dg-label">Projected</div><div class="dg-val">${d.projected}</div></div>`;
-        html+=`<div><div class="dg-label">Program Coordinator</div><div class="dg-val">${d.pc||'—'}</div></div>`;
+        html+=`<div><div class="dg-label">Mode</div><div class="dg-val">${d.mode||'—'}</div></div>`;
+        html+=`<div><div class="dg-label">Certified</div><div class="dg-val">${d.certified||'—'}</div></div>`;
         html+=`<div><div class="dg-label">Non-Negotiables</div><div class="dg-val">${d.nonNeg||'—'}</div></div>`;
-        html+=`<div><div class="dg-label">Notes / Experience</div><div class="dg-val">${d.notes||'—'}</div></div>`;
+        html+=`<div><div class="dg-label">Notes</div><div class="dg-val">${d.notes||'—'}</div></div>`;
         html+=`</div></td></tr>`;
       }
     }else{
-      html+=`<tr>`;
-      html+=`<td>${ptag}${pcBadge}</td>`;
-      html+=`<td style="font-weight:500">${d.school||'—'}</td>`;
-      html+=`<td>${d.location||'—'}</td>`;
-      html+=`<td>${d.dateRequested||'—'}</td>`;
-      html+=`<td>${d.projected}</td>`;
-      html+=`<td class="${nc}">${d.needed}</td>`;
-      html+=`<td>${d.subject||'—'}</td>`;
-      html+=`<td><span class="mb ${mc}">${d.mode||'—'}</span></td>`;
-      html+=`<td style="min-width:220px">${formatSchedule(d)}</td>`;
-      html+=`<td>${d.startDate||'—'}</td>`;
-      html+=`<td>${d.payRate||'—'}</td>`;
-      html+=`<td>${formatCert(d.certified)}</td>`;
-      html+=`<td class="notes-cell">${d.nonNeg||'—'}</td>`;
-      html+=`<td class="notes-cell">${d.notes||'—'}</td>`;
-      html+=`</tr>`;
+      html+=`<tr${urg?' class="urgent-row"':''}>`;
+      html+=`<td>${ptag}</td><td class="pc-cell">${d.pc||'—'}</td>`;
+      html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
+      html+=`<td>${d.dateRequested||'—'}</td><td>${d.projected}</td><td class="${nc}">${d.needed}</td>`;
+      html+=`<td>${d.subject||'—'}</td><td><span class="mb ${mc}">${d.mode||'—'}</span></td>`;
+      html+=`<td style="min-width:200px">${fmtSched(d)}</td>`;
+      html+=`<td>${fmtStart(d)}</td><td>${d.payRate||'—'}</td>`;
+      html+=`<td>${fmtCert(d.certified)}</td>`;
+      html+=`<td class="notes-cell">${d.nonNeg||'—'}</td><td class="notes-cell">${d.notes||'—'}</td></tr>`;
     }
   });
   tb.innerHTML=html;
   document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`;
 }
-
 loadData();
 </script>
 </body>
