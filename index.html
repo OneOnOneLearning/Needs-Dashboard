@@ -79,7 +79,7 @@ body::after{width:600px;height:600px;bottom:-150px;left:-150px;background:radial
 .vt-btn.active{background:var(--navy);color:#fff}
 .tw{overflow-x:auto;max-height:650px;overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:.82rem}
-thead{background:rgba(0,0,0,.025);position:sticky;top:0;z-index:2}
+thead{background:#edeef1;position:sticky;top:0;z-index:2}
 th{text-align:left;padding:12px 14px;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,0,0,.05)}
 th:hover{color:var(--red)}
 th .sa{margin-left:2px;opacity:.3;font-size:.6rem}
@@ -162,6 +162,7 @@ a.pt:hover{opacity:.7}
 <select class="fs" id="filterProgram"><option value="">All Programs</option></select>
 <select class="fs" id="filterPC"><option value="">All PCs</option></select>
 <select class="fs" id="filterUrgent"><option value="">All Priorities</option><option value="asap">ASAP Only</option></select>
+<label style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;border:1px solid rgba(0,0,0,.08);background:var(--surface);backdrop-filter:var(--blur);font-size:.82rem;color:var(--text-dim);cursor:pointer;white-space:nowrap;user-select:none"><input type="checkbox" id="hideFilled" style="accent-color:var(--red);cursor:pointer"> Hide Filled</label>
 </div>
 </div>
 <div class="tw"><table><thead><tr id="tableHead"></tr></thead><tbody id="tableBody"></tbody></table></div>
@@ -280,6 +281,7 @@ document.getElementById('searchInput').addEventListener('input',renderTable);
 document.getElementById('filterProgram').addEventListener('change',renderTable);
 document.getElementById('filterPC').addEventListener('change',renderTable);
 document.getElementById('filterUrgent').addEventListener('change',renderTable);
+document.getElementById('hideFilled').addEventListener('change',renderTable);
 
 function fmtSched(d){
   const days=[{k:'mon',l:'Mon'},{k:'tues',l:'Tue'},{k:'wed',l:'Wed'},{k:'thurs',l:'Thu'},{k:'friday',l:'Fri'},{k:'weekends',l:'Wknd'}];
@@ -308,11 +310,13 @@ function renderTable(){
   const s=document.getElementById('searchInput').value.toLowerCase(),
     pf=document.getElementById('filterProgram').value,
     pcf=document.getElementById('filterPC').value,
-    uf=document.getElementById('filterUrgent').value;
+    uf=document.getElementById('filterUrgent').value,
+    hf=document.getElementById('hideFilled').checked;
   let f=data.filter(d=>{
     if(pf&&d.program!==pf)return false;
     if(pcf&&d.pc!==pcf)return false;
     if(uf==='asap'&&!isUrgent(d))return false;
+    if(hf&&d.needed<=0)return false;
     if(s){const h=(d.location+d.school+d.subject+d.program+d.notes+d.nonNeg+d.pc).toLowerCase();if(!h.includes(s))return false}
     return true;
   });
