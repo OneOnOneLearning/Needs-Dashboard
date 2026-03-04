@@ -3,746 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OOOL Tutor Needs Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<title>One on One Learning — Tutor Needs Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0f1117;
-    --surface: #181a20;
-    --surface-alt: #1e2028;
-    --border: #2a2d38;
-    --text: #e8e9ed;
-    --text-dim: #8b8e9a;
-    --accent: #6c5ce7;
-    --accent-glow: rgba(108, 92, 231, 0.15);
-    --green: #00d68f;
-    --green-dim: rgba(0, 214, 143, 0.12);
-    --amber: #ffaa00;
-    --amber-dim: rgba(255, 170, 0, 0.12);
-    --red: #ff6b6b;
-    --red-dim: rgba(255, 107, 107, 0.12);
-    --blue: #4da6ff;
-    --blue-dim: rgba(77, 166, 255, 0.12);
-    --radius: 14px;
-    --radius-sm: 8px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* --- LOADING OVERLAY --- */
-  .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    transition: opacity 0.4s;
-  }
-  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-overlay p { margin-top: 16px; color: var(--text-dim); font-size: 0.9rem; }
-
-  /* --- HEADER --- */
-  .header {
-    padding: 40px 48px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-  .header-left h1 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 2.4rem;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    color: var(--text);
-  }
-  .header-left h1 span { color: var(--accent); }
-  .header-left p {
-    color: var(--text-dim);
-    font-size: 0.92rem;
-    margin-top: 4px;
-  }
-  .header-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-  .badge-live {
-    background: var(--green-dim);
-    color: var(--green);
-  }
-  .badge-live::before {
-    content: '';
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  .badge-date {
-    background: var(--surface-alt);
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-  }
-  .badge-source {
-    background: var(--accent-glow);
-    color: var(--accent);
-    border: 1px solid rgba(108,92,231,0.2);
-    cursor: default;
-  }
-  .refresh-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-family: inherit;
-    font-size: 0.82rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .refresh-btn svg { width: 14px; height: 14px; }
-  .refresh-btn.spinning svg { animation: spin 0.6s linear infinite; }
-
-  /* --- SUMMARY CARDS --- */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    padding: 32px 48px 0;
-  }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s;
-  }
-  .card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-  }
-  .card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    border-radius: var(--radius) var(--radius) 0 0;
-  }
-  .card:nth-child(1)::after { background: var(--accent); }
-  .card:nth-child(2)::after { background: var(--red); }
-  .card:nth-child(3)::after { background: var(--green); }
-  .card:nth-child(4)::after { background: var(--amber); }
-  .card:nth-child(5)::after { background: var(--blue); }
-  .card-label {
-    font-size: 0.76rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 500;
-  }
-  .card-value {
-    font-family: 'Instrument Serif', serif;
-    font-size: 2.6rem;
-    font-weight: 400;
-    margin-top: 8px;
-    line-height: 1;
-  }
-  .card:nth-child(1) .card-value { color: var(--accent); }
-  .card:nth-child(2) .card-value { color: var(--red); }
-  .card:nth-child(3) .card-value { color: var(--green); }
-  .card:nth-child(4) .card-value { color: var(--amber); }
-  .card:nth-child(5) .card-value { color: var(--blue); }
-  .card-sub {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    margin-top: 6px;
-  }
-
-  /* --- CHARTS SECTION --- */
-  .charts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding: 32px 48px 0;
-  }
-  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
-  .chart-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-  }
-  .chart-box h3 {
-    font-size: 0.88rem;
-    font-weight: 500;
-    margin-bottom: 20px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .chart-container {
-    position: relative;
-    height: 280px;
-  }
-
-  /* --- FILTERS + TABLE --- */
-  .table-section {
-    padding: 32px 48px 48px;
-  }
-  .table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .table-header h2 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.5rem;
-    font-weight: 400;
-  }
-  .filters {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .filter-select, .filter-input {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 0.85rem;
-    padding: 8px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-    -webkit-appearance: none;
-  }
-  .filter-select { padding-right: 32px; cursor: pointer; }
-  .filter-select:focus, .filter-input:focus { border-color: var(--accent); }
-  .filter-input { width: 220px; }
-  .filter-input::placeholder { color: var(--text-dim); }
-
-  .table-wrap {
-    overflow-x: auto;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    max-height: 600px;
-    overflow-y: auto;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.86rem;
-  }
-  thead {
-    background: var(--surface-alt);
-    position: sticky;
-    top: 0;
-    z-index: 2;
-  }
-  th {
-    text-align: left;
-    padding: 14px 16px;
-    font-weight: 500;
-    font-size: 0.74rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-dim);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    border-bottom: 1px solid var(--border);
-  }
-  th:hover { color: var(--accent); }
-  th .sort-arrow { margin-left: 4px; opacity: 0.4; font-size: 0.7rem; }
-  th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
-  td {
-    padding: 11px 16px;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  tr:last-child td { border-bottom: none; }
-  tbody tr {
-    background: var(--surface);
-    transition: background 0.15s;
-  }
-  tbody tr:hover { background: var(--surface-alt); }
-  .program-tag {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 0.76rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-  .needed-high { color: var(--red); font-weight: 600; }
-  .needed-med { color: var(--amber); font-weight: 600; }
-  .needed-low { color: var(--green); font-weight: 600; }
-  .mode-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 0.74rem;
-    font-weight: 500;
-  }
-  .mode-inperson { background: var(--blue-dim); color: var(--blue); }
-  .mode-virtual { background: var(--green-dim); color: var(--green); }
-  .mode-hybrid { background: var(--amber-dim); color: var(--amber); }
-
-  .empty-state {
-    text-align: center;
-    padding: 80px 24px;
-    color: var(--text-dim);
-  }
-  .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
-  .empty-state h3 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 1.3rem;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-
-  .row-count {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    margin-top: 12px;
-    text-align: right;
-  }
-
-  /* --- ERROR BANNER --- */
-  .error-banner {
-    margin: 20px 48px 0;
-    padding: 16px 20px;
-    background: var(--red-dim);
-    border: 1px solid rgba(255,107,107,0.3);
-    border-radius: var(--radius-sm);
-    color: var(--red);
-    font-size: 0.88rem;
-    display: none;
-  }
-  .error-banner.show { display: flex; align-items: center; gap: 10px; }
-  .error-banner code {
-    background: rgba(255,107,107,0.15);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.82rem;
-  }
-
-  /* --- SCROLLBAR --- */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* --- FOOTER --- */
-  .footer {
-    text-align: center;
-    padding: 24px 48px 40px;
-    color: var(--text-dim);
-    font-size: 0.78rem;
-    opacity: 0.5;
-  }
-
-  @media (max-width: 640px) {
-    .header, .cards, .charts, .table-section { padding-left: 20px; padding-right: 20px; }
-    .header-left h1 { font-size: 1.7rem; }
-    .error-banner { margin-left: 20px; margin-right: 20px; }
-  }
+:root{--bg:#f4f6f9;--surface:rgba(255,255,255,0.55);--surface-hover:rgba(255,255,255,0.75);--border:rgba(255,255,255,0.6);--shadow:0 8px 32px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);--shadow-lg:0 16px 48px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);--text:#1a1f36;--text-dim:#6b7280;--text-light:#9ca3af;--red:#c8232c;--red-dim:rgba(200,35,44,0.08);--green:#2d8a4e;--green-dim:rgba(45,138,78,0.08);--navy:#1a1f36;--blue:#3b6eb5;--blue-dim:rgba(59,110,181,0.08);--amber:#d4930d;--amber-dim:rgba(212,147,13,0.08);--radius:20px;--radius-sm:12px;--blur:blur(20px) saturate(1.5)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;background:linear-gradient(160deg,#f0f2f6 0%,#e8edf5 30%,#f5f0ee 60%,#f2f4f7 100%);background-attachment:fixed}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(80px);opacity:0.3;z-index:0;pointer-events:none}
+body::before{width:500px;height:500px;top:-100px;right:-100px;background:radial-gradient(circle,rgba(200,35,44,0.15),transparent 70%)}
+body::after{width:600px;height:600px;bottom:-150px;left:-150px;background:radial-gradient(circle,rgba(45,138,78,0.12),transparent 70%)}
+.page-wrapper{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 32px}
+.glass{background:var(--surface);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius)}
+.loading-overlay{position:fixed;inset:0;background:rgba(244,246,249,0.95);backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity 0.5s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay p{margin-top:14px;color:var(--text-dim);font-size:.88rem}
+.header{padding:36px 0 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.header-left{display:flex;align-items:center;gap:20px}
+.logo-img{height:44px;width:auto;object-fit:contain}
+.header-title h1{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:500;color:var(--navy);letter-spacing:-.01em;line-height:1.2}
+.header-title p{color:var(--text-dim);font-size:.82rem;margin-top:2px;font-weight:400}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;font-size:.75rem;font-weight:500;letter-spacing:.02em}
+.badge-live{background:var(--green-dim);color:var(--green)}
+.badge-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.badge-date{background:rgba(0,0,0,0.04);color:var(--text-dim)}
+.refresh-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;border:1px solid rgba(0,0,0,0.08);background:var(--surface);backdrop-filter:var(--blur);color:var(--text-dim);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s}
+.refresh-btn:hover{background:var(--surface-hover);color:var(--red);border-color:rgba(200,35,44,0.2)}
+.refresh-btn svg{width:13px;height:13px}
+.refresh-btn.spinning svg{animation:spin .6s linear infinite}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding-top:28px}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.cards{grid-template-columns:1fr}}
+.card{padding:24px;position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.card:nth-child(1) .card-icon{background:var(--red-dim);color:var(--red)}
+.card:nth-child(2) .card-icon{background:var(--amber-dim);color:var(--amber)}
+.card:nth-child(3) .card-icon{background:var(--green-dim);color:var(--green)}
+.card:nth-child(4) .card-icon{background:var(--blue-dim);color:var(--blue)}
+.card-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.card-value{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:500;margin-top:6px;line-height:1;color:var(--navy)}
+.card-sub{font-size:.78rem;color:var(--text-dim);margin-top:4px}
+.charts{display:grid;grid-template-columns:1.3fr .7fr;gap:14px;padding-top:20px}
+@media(max-width:900px){.charts{grid-template-columns:1fr}}
+.chart-box{padding:28px}
+.chart-box h3{font-size:.8rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:20px}
+.chart-container{position:relative;height:280px}
+.table-section{padding:20px 0 48px}
+.table-card{padding:0;overflow:hidden}
+.table-top{display:flex;justify-content:space-between;align-items:center;padding:24px 28px 18px;flex-wrap:wrap;gap:12px}
+.table-top h2{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:500;color:var(--navy)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filter-select,.filter-input{background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.06);border-radius:100px;color:var(--text);font-family:inherit;font-size:.82rem;padding:8px 16px;outline:none;transition:all .2s;-webkit-appearance:none}
+.filter-select{padding-right:30px;cursor:pointer}
+.filter-select:focus,.filter-input:focus{border-color:var(--red);background:rgba(200,35,44,0.03)}
+.filter-input{width:210px}
+.filter-input::placeholder{color:var(--text-light)}
+.table-wrap{overflow-x:auto;max-height:540px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead{background:rgba(0,0,0,0.02);position:sticky;top:0;z-index:2}
+th{text-align:left;padding:12px 18px;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid rgba(0,0,0,0.05)}
+th:hover{color:var(--red)}
+th .sort-arrow{margin-left:3px;opacity:.3;font-size:.65rem}
+th.sorted .sort-arrow{opacity:1;color:var(--red)}
+td{padding:11px 18px;border-bottom:1px solid rgba(0,0,0,0.04);white-space:nowrap;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:rgba(200,35,44,0.02)}
+.program-tag{display:inline-block;padding:4px 12px;border-radius:100px;font-size:.73rem;font-weight:600;letter-spacing:.02em}
+.needed-high{color:var(--red);font-weight:700}
+.needed-med{color:var(--amber);font-weight:700}
+.needed-low{color:var(--green);font-weight:700}
+.mode-badge{display:inline-block;padding:4px 12px;border-radius:100px;font-size:.72rem;font-weight:600}
+.mode-inperson{background:var(--blue-dim);color:var(--blue)}
+.mode-virtual{background:var(--green-dim);color:var(--green)}
+.empty-state{text-align:center;padding:60px 24px;color:var(--text-dim)}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--text);margin-bottom:6px}
+.row-count{font-size:.78rem;color:var(--text-light);padding:12px 28px 18px;text-align:right}
+.error-banner{margin-top:16px;padding:14px 18px;background:var(--red-dim);border:1px solid rgba(200,35,44,0.12);border-radius:var(--radius-sm);color:var(--red);font-size:.84rem;display:none}
+.error-banner.show{display:flex;align-items:center;gap:10px}
+.error-banner code{background:rgba(200,35,44,0.08);padding:2px 6px;border-radius:4px;font-size:.8rem}
+.footer{text-align:center;padding:12px 0 40px;color:var(--text-light);font-size:.72rem;letter-spacing:.03em}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:3px}
+.fade-in{animation:fadeIn .6s ease forwards;opacity:0}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){.page-wrapper{padding:0 16px}.header-title h1{font-size:1.3rem}.logo-img{height:36px}}
 </style>
 </head>
 <body>
-
-<!-- LOADING -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <p>Loading tutor needs data...</p>
-</div>
-
-<!-- HEADER -->
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><p>Loading dashboard...</p></div>
+<div class="page-wrapper">
 <div class="header fade-in">
-  <div class="header-left">
-    <h1>OOOL <span>Tutor Needs</span></h1>
-    <p>Consolidated hiring dashboard &mdash; auto-updated daily</p>
-  </div>
-  <div class="header-right">
-    <span class="badge badge-live" id="statusBadge">Auto-Updated</span>
-    <span class="badge badge-date" id="lastUpdated">&mdash;</span>
-    <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-      Refresh
-    </button>
-  </div>
+<div class="header-left">
+<img class="logo-img" src="https://cdn.prod.website-files.com/6511d86dcc6ffe4be8b3e3c0/67a51d3a089fcce7d3a59514_2a1058a3dbdbabadadb72530baf47dea_oneononelearning.svg" alt="One on One Learning" onerror="this.style.display='none'">
+<div class="header-title"><h1>Tutor Needs Dashboard</h1><p>Consolidated view across all programs — updated daily</p></div>
 </div>
-
-<!-- ERROR BANNER -->
-<div class="error-banner" id="errorBanner">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-  <span id="errorMsg"></span>
+<div class="header-right">
+<span class="badge badge-live" id="statusBadge">Auto-Updated</span>
+<span class="badge badge-date" id="lastUpdated">—</span>
+<button class="refresh-btn" id="refreshBtn" onclick="loadData()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>Refresh</button>
 </div>
-
-<!-- SUMMARY CARDS -->
+</div>
+<div class="error-banner" id="errorBanner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="errorMsg"></span></div>
 <div class="cards fade-in" style="animation-delay:.1s" id="summaryCards"></div>
-
-<!-- CHARTS -->
 <div class="charts fade-in" style="animation-delay:.2s">
-  <div class="chart-box">
-    <h3>Tutors Needed by Program</h3>
-    <div class="chart-container"><canvas id="chartProgram"></canvas></div>
-  </div>
-  <div class="chart-box">
-    <h3>In-Person vs Virtual Split</h3>
-    <div class="chart-container"><canvas id="chartMode"></canvas></div>
-  </div>
+<div class="chart-box glass"><h3>Tutors Needed by Program</h3><div class="chart-container"><canvas id="chartProgram"></canvas></div></div>
+<div class="chart-box glass"><h3>In-Person vs Virtual</h3><div class="chart-container"><canvas id="chartMode"></canvas></div></div>
 </div>
-
-<!-- TABLE -->
 <div class="table-section fade-in" style="animation-delay:.3s">
-  <div class="table-header">
-    <h2>All Open Positions</h2>
-    <div class="filters">
-      <input class="filter-input" type="text" id="searchInput" placeholder="Search locations, subjects...">
-      <select class="filter-select" id="filterProgram"><option value="">All Programs</option></select>
-      <select class="filter-select" id="filterMode"><option value="">All Modes</option><option value="In Person">In Person</option><option value="Virtual">Virtual</option><option value="Hybrid">Hybrid</option></select>
-    </div>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr id="tableHead"></tr></thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-  <div class="row-count" id="rowCount"></div>
+<div class="table-card glass">
+<div class="table-top"><h2>All Open Positions</h2>
+<div class="filters">
+<input class="filter-input" type="text" id="searchInput" placeholder="Search locations, subjects...">
+<select class="filter-select" id="filterProgram"><option value="">All Programs</option></select>
+<select class="filter-select" id="filterMode"><option value="">All Modes</option><option value="In Person">In Person</option><option value="Virtual">Virtual</option></select>
+</div></div>
+<div class="table-wrap"><table><thead><tr id="tableHead"></tr></thead><tbody id="tableBody"></tbody></table></div>
+<div class="row-count" id="rowCount"></div>
+</div></div>
+<div class="footer">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
 </div>
-
-<div class="footer">OOOL Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
-
 <script>
-// =====================================================
-// CONFIGURATION — UPDATE THESE TWO VALUES
-// =====================================================
-// Replace with your actual GitHub raw URL after setup:
-const DATA_URL = 'data.json';
-// For GitHub Pages, this will be something like:
-// const DATA_URL = 'https://yourusername.github.io/oool-dashboard/data.json';
-// Or use the raw GitHub URL:
-// const DATA_URL = 'https://raw.githubusercontent.com/yourusername/oool-dashboard/main/data.json';
-// =====================================================
-
-let data = [];
-let sortCol = null;
-let sortAsc = true;
-const programColors = {};
-const palette = ['#6c5ce7','#4da6ff','#00d68f','#ffaa00','#ff6b6b','#a29bfe','#fd79a8','#00cec9','#e17055','#74b9ff','#55efc4','#fab1a0','#81ecec','#dfe6e9'];
-
-// ---- DATA LOADING ----
-async function loadData() {
-  const btn = document.getElementById('refreshBtn');
-  btn.classList.add('spinning');
-  document.getElementById('errorBanner').classList.remove('show');
-
-  try {
-    const resp = await fetch(DATA_URL + '?t=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const json = await resp.json();
-
-    // Support both {updated, records} format and plain array
-    if (Array.isArray(json)) {
-      data = json;
-    } else if (json.records) {
-      data = json.records;
-      if (json.updated) {
-        document.getElementById('lastUpdated').textContent = json.updated;
-      }
-    } else {
-      throw new Error('Unexpected JSON format');
-    }
-
-    // Normalize field names (handle variations)
-    data = data.map(d => ({
-      program: d.program || d.Program || '',
-      location: d.location || d.Location || '',
-      dateRequested: d.dateRequested || d.date_requested || d['Date Requested'] || '',
-      projected: parseInt(d.projected || d.Projected || d['Projected Tutors'] || 0),
-      needed: parseInt(d.needed || d.Needed || d['Current # Needed'] || 0),
-      subject: d.subject || d.Subject || d['Grades/Subject'] || '',
-      mode: d.mode || d.Mode || d['In Person/Virtual'] || '',
-      days: d.days || d.Days || '',
-      startDate: d.startDate || d.start_date || d['Start Date'] || '',
-      payRate: d.payRate || d.pay_rate || d['Pay Rate'] || '',
-    }));
-
-    if (!document.getElementById('lastUpdated').textContent || document.getElementById('lastUpdated').textContent === '—') {
-      document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
-    }
-
-    buildAll();
-  } catch (err) {
-    console.error('Load error:', err);
-    // If fetch fails and we have no data, load sample data for demo
-    if (data.length === 0) {
-      loadSampleData();
-      buildAll();
-      document.getElementById('errorBanner').classList.add('show');
-      document.getElementById('errorMsg').innerHTML = 'Could not fetch live data — showing <strong>sample data</strong>. Update <code>DATA_URL</code> in the HTML file with your GitHub URL.';
-    } else {
-      document.getElementById('errorBanner').classList.add('show');
-      document.getElementById('errorMsg').textContent = 'Refresh failed: ' + err.message + '. Showing cached data.';
-    }
-  } finally {
-    btn.classList.remove('spinning');
-    document.getElementById('loadingOverlay').classList.add('hidden');
-  }
-}
-
-function loadSampleData() {
-  data = [
-    {program:"LACOE",location:"Challenger Memorial Youth Center",dateRequested:"10/8/2025",projected:2,needed:2,subject:"ELA & Math",mode:"In Person",days:"Mon,Tue,Wed,Thu",startDate:"ASAP",payRate:"$22/hr"},
-    {program:"LACOE",location:"Dorothy Kirby Center",dateRequested:"10/8/2025",projected:3,needed:1,subject:"ELA & Math",mode:"In Person",days:"Mon–Fri",startDate:"ASAP",payRate:"$22/hr"},
-    {program:"LACOE",location:"Barry J. Nidorf",dateRequested:"11/1/2025",projected:4,needed:3,subject:"Math",mode:"In Person",days:"Mon,Wed,Fri",startDate:"11/15/2025",payRate:"$22/hr"},
-    {program:"LACOE",location:"Los Padrinos Juvenile Hall",dateRequested:"11/5/2025",projected:2,needed:2,subject:"Science & Math",mode:"In Person",days:"Tue,Thu",startDate:"11/20/2025",payRate:"$22/hr"},
-    {program:"LAUSD",location:"Fremont HS",dateRequested:"9/15/2025",projected:5,needed:3,subject:"Algebra I & II",mode:"In Person",days:"Mon–Thu",startDate:"10/1/2025",payRate:"$20/hr"},
-    {program:"LAUSD",location:"Jefferson MS",dateRequested:"9/20/2025",projected:3,needed:2,subject:"ELA 7th & 8th",mode:"In Person",days:"Mon,Wed,Fri",startDate:"10/7/2025",payRate:"$20/hr"},
-    {program:"LAUSD",location:"Manual Arts HS",dateRequested:"10/1/2025",projected:4,needed:4,subject:"Chemistry & Physics",mode:"Hybrid",days:"Mon,Tue,Thu,Fri",startDate:"10/15/2025",payRate:"$20/hr"},
-    {program:"LAUSD",location:"South Gate MS",dateRequested:"10/10/2025",projected:2,needed:1,subject:"Math 6th",mode:"Virtual",days:"Tue,Thu",startDate:"10/21/2025",payRate:"$20/hr"},
-    {program:"Compton USD",location:"Compton HS",dateRequested:"10/5/2025",projected:3,needed:3,subject:"ELA & Math",mode:"In Person",days:"Mon–Thu",startDate:"10/14/2025",payRate:"$21/hr"},
-    {program:"Compton USD",location:"Whaley MS",dateRequested:"10/12/2025",projected:2,needed:1,subject:"Math 7th",mode:"Virtual",days:"Wed,Fri",startDate:"10/28/2025",payRate:"$21/hr"},
-    {program:"Inglewood USD",location:"Inglewood HS",dateRequested:"10/8/2025",projected:4,needed:2,subject:"Algebra I",mode:"In Person",days:"Mon–Fri",startDate:"10/20/2025",payRate:"$20/hr"},
-    {program:"Inglewood USD",location:"Crozier MS",dateRequested:"10/15/2025",projected:2,needed:2,subject:"ELA",mode:"Hybrid",days:"Mon,Wed,Fri",startDate:"11/1/2025",payRate:"$20/hr"},
-    {program:"Lynwood USD",location:"Lynwood HS",dateRequested:"9/28/2025",projected:3,needed:1,subject:"Biology",mode:"In Person",days:"Tue,Thu",startDate:"10/7/2025",payRate:"$20/hr"},
-    {program:"Lynwood USD",location:"Hosler MS",dateRequested:"10/20/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",days:"Mon,Wed,Fri",startDate:"11/3/2025",payRate:"$20/hr"},
-    {program:"Centinela Valley",location:"Hawthorne HS",dateRequested:"10/3/2025",projected:2,needed:2,subject:"Geometry",mode:"In Person",days:"Mon,Tue,Thu",startDate:"10/14/2025",payRate:"$21/hr"},
-    {program:"Centinela Valley",location:"Lawndale HS",dateRequested:"10/18/2025",projected:3,needed:1,subject:"ELA 9th & 10th",mode:"Virtual",days:"Tue,Thu",startDate:"11/1/2025",payRate:"$21/hr"},
-    {program:"Pasadena USD",location:"Pasadena HS",dateRequested:"10/10/2025",projected:4,needed:2,subject:"AP Calculus",mode:"In Person",days:"Mon–Thu",startDate:"10/21/2025",payRate:"$23/hr"},
-    {program:"Pasadena USD",location:"McKinley K-8",dateRequested:"10/25/2025",projected:2,needed:2,subject:"Reading 3rd-5th",mode:"Hybrid",days:"Mon,Wed,Fri",startDate:"11/10/2025",payRate:"$23/hr"},
-    {program:"Pomona USD",location:"Pomona HS",dateRequested:"10/14/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",days:"Mon–Thu",startDate:"10/28/2025",payRate:"$20/hr"},
-    {program:"Pomona USD",location:"Emerson MS",dateRequested:"10/22/2025",projected:2,needed:1,subject:"ELA 6th",mode:"Virtual",days:"Wed,Fri",startDate:"11/5/2025",payRate:"$20/hr"},
-  ];
-  document.getElementById('lastUpdated').textContent = 'Sample Data';
-  document.getElementById('statusBadge').innerHTML = 'Demo Mode';
-  document.getElementById('statusBadge').className = 'badge badge-date';
-}
-
-// ---- BUILD ----
-function buildAll() {
-  const programs = [...new Set(data.map(d => d.program))];
-  programs.forEach((p,i) => { programColors[p] = palette[i % palette.length]; });
-  buildCards();
-  buildCharts();
-  buildFilters();
-  renderTable();
-}
-
-function buildCards() {
-  const totalNeeded = data.reduce((s,d) => s + d.needed, 0);
-  const totalProjected = data.reduce((s,d) => s + d.projected, 0);
-  const programs = [...new Set(data.map(d => d.program))];
-  const locations = [...new Set(data.map(d => d.location))];
-  const urgent = data.filter(d => d.needed >= 3).length;
-  const inPerson = data.filter(d => d.mode.toLowerCase().includes('in person')).reduce((s,d) => s + d.needed, 0);
-  const virtual = data.filter(d => d.mode.toLowerCase().includes('virtual')).reduce((s,d) => s + d.needed, 0);
-
-  document.getElementById('summaryCards').innerHTML = `
-    <div class="card"><div class="card-label">Total Tutors Needed</div><div class="card-value">${totalNeeded}</div><div class="card-sub">of ${totalProjected} projected across all programs</div></div>
-    <div class="card"><div class="card-label">Urgent (3+ needed)</div><div class="card-value">${urgent}</div><div class="card-sub">location${urgent !== 1 ? 's' : ''} with high demand</div></div>
-    <div class="card"><div class="card-label">Active Programs</div><div class="card-value">${programs.length}</div><div class="card-sub">${locations.length} locations total</div></div>
-    <div class="card"><div class="card-label">In-Person Needed</div><div class="card-value">${inPerson}</div><div class="card-sub">${totalNeeded ? Math.round(inPerson/totalNeeded*100) : 0}% of open positions</div></div>
-    <div class="card"><div class="card-label">Virtual Needed</div><div class="card-value">${virtual}</div><div class="card-sub">${totalNeeded ? Math.round(virtual/totalNeeded*100) : 0}% of open positions</div></div>
-  `;
-}
-
-let chartP, chartM;
-function buildCharts() {
-  const programs = [...new Set(data.map(d => d.program))];
-  const progNeeded = programs.map(p => data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0));
-  const colors = programs.map(p => programColors[p]);
-
-  if (chartP) chartP.destroy();
-  chartP = new Chart(document.getElementById('chartProgram').getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: programs,
-      datasets: [{
-        data: progNeeded,
-        backgroundColor: colors.map(c => c + '33'),
-        borderColor: colors,
-        borderWidth: 1.5,
-        borderRadius: 6,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#8b8e9a', font: { size: 11, family: 'DM Sans' }, maxRotation: 45, minRotation: 0 }, grid: { display: false }, border: { display: false } },
-        y: { ticks: { color: '#8b8e9a', font: { size: 11 }, stepSize: 2 }, grid: { color: '#2a2d3822' }, border: { display: false }, beginAtZero: true }
-      }
-    }
-  });
-
-  const modeLabels = ['In Person','Virtual','Hybrid'];
-  const modeVals = modeLabels.map(m => data.filter(d => d.mode.toLowerCase().includes(m.toLowerCase())).reduce((s,d)=>s+d.needed,0));
-  const modeColors = ['#4da6ff','#00d68f','#ffaa00'];
-
-  if (chartM) chartM.destroy();
-  chartM = new Chart(document.getElementById('chartMode').getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: modeLabels,
-      datasets: [{
-        data: modeVals,
-        backgroundColor: modeColors.map(c => c + '44'),
-        borderColor: modeColors,
-        borderWidth: 2,
-        hoverOffset: 8,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      cutout: '65%',
-      plugins: { legend: { position: 'bottom', labels: { color: '#8b8e9a', font: { size: 12, family: 'DM Sans' }, padding: 16, usePointStyle: true, pointStyleWidth: 10 } } }
-    }
-  });
-}
-
-function buildFilters() {
-  const programs = [...new Set(data.map(d => d.program))].sort();
-  const sel = document.getElementById('filterProgram');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">All Programs</option>' + programs.map(p => `<option value="${p}">${p}</option>`).join('');
-  sel.value = current;
-}
-
-document.getElementById('searchInput').addEventListener('input', renderTable);
-document.getElementById('filterProgram').addEventListener('change', renderTable);
-document.getElementById('filterMode').addEventListener('change', renderTable);
-
-const columns = [
-  {key:'program', label:'Program'},
-  {key:'location', label:'Location'},
-  {key:'dateRequested', label:'Date Requested'},
-  {key:'projected', label:'Projected'},
-  {key:'needed', label:'# Needed'},
-  {key:'subject', label:'Grades / Subject'},
-  {key:'mode', label:'Mode'},
-  {key:'days', label:'Days'},
-  {key:'startDate', label:'Start Date'},
-  {key:'payRate', label:'Pay Rate'},
-];
-
-function buildTableHead() {
-  document.getElementById('tableHead').innerHTML = columns.map(c =>
-    `<th data-key="${c.key}" class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sort-arrow">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`
-  ).join('');
-}
-
-function sortTable(key) {
-  if (sortCol === key) sortAsc = !sortAsc;
-  else { sortCol = key; sortAsc = true; }
-  renderTable();
-}
-
-function renderTable() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  const progFilter = document.getElementById('filterProgram').value;
-  const modeFilter = document.getElementById('filterMode').value;
-
-  let filtered = data.filter(d => {
-    if (progFilter && d.program !== progFilter) return false;
-    if (modeFilter && !d.mode.toLowerCase().includes(modeFilter.toLowerCase())) return false;
-    if (search) {
-      const hay = (d.location + d.subject + d.program + d.days + d.payRate).toLowerCase();
-      if (!hay.includes(search)) return false;
-    }
-    return true;
-  });
-
-  if (sortCol) {
-    filtered.sort((a,b) => {
-      let va = a[sortCol], vb = b[sortCol];
-      if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
-      va = (va||'').toString().toLowerCase();
-      vb = (vb||'').toString().toLowerCase();
-      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-    });
-  }
-
-  buildTableHead();
-  const tbody = document.getElementById('tableBody');
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="${columns.length}"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><h3>No matching records</h3><p>Try adjusting your filters</p></div></td></tr>`;
-    document.getElementById('rowCount').textContent = '';
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(d => {
-    const nc = d.needed >= 3 ? 'needed-high' : d.needed >= 2 ? 'needed-med' : 'needed-low';
-    const mc = d.mode.toLowerCase().includes('virtual') ? 'mode-virtual' : d.mode.toLowerCase().includes('hybrid') ? 'mode-hybrid' : 'mode-inperson';
-    const pc = programColors[d.program] || '#6c5ce7';
-    return `<tr>
-      <td><span class="program-tag" style="background:${pc}22;color:${pc}">${d.program}</span></td>
-      <td>${d.location}</td>
-      <td>${d.dateRequested}</td>
-      <td>${d.projected}</td>
-      <td class="${nc}">${d.needed}</td>
-      <td>${d.subject}</td>
-      <td><span class="mode-badge ${mc}">${d.mode}</span></td>
-      <td>${d.days}</td>
-      <td>${d.startDate}</td>
-      <td>${d.payRate}</td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('rowCount').textContent = `Showing ${filtered.length} of ${data.length} positions`;
-}
-
-// ---- INIT ----
+const DATA_URL='data.json';
+let data=[],sortCol=null,sortAsc=true;
+const programColors={};
+const palette=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48'];
+async function loadData(){const btn=document.getElementById('refreshBtn');btn.classList.add('spinning');document.getElementById('errorBanner').classList.remove('show');try{const r=await fetch(DATA_URL+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(Array.isArray(j))data=j;else if(j.records){data=j.records;if(j.updated)document.getElementById('lastUpdated').textContent=j.updated}else throw new Error('Unexpected format');data=data.map(d=>({program:d.program||d.Program||'',location:d.location||d.Location||'',dateRequested:d.dateRequested||d.date_requested||d['Date Requested']||'',projected:parseInt(d.projected||d.Projected||d['Projected Tutors']||0),needed:parseInt(d.needed||d.Needed||d['Current # Needed']||0),subject:d.subject||d.Subject||d['Grades/Subject']||'',mode:d.mode||d.Mode||d['In Person/Virtual']||'',days:d.days||d.Days||'',startDate:d.startDate||d.start_date||d['Start Date']||'',payRate:d.payRate||d.pay_rate||d['Pay Rate']||''}));if(!document.getElementById('lastUpdated').textContent||document.getElementById('lastUpdated').textContent==='—')document.getElementById('lastUpdated').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});buildAll()}catch(e){if(data.length===0){loadSample();buildAll();document.getElementById('errorBanner').classList.add('show');document.getElementById('errorMsg').innerHTML='Could not load live data — showing <strong>sample data</strong>. Connect Power Automate to push real data.'}else{document.getElementById('errorBanner').classList.add('show');document.getElementById('errorMsg').textContent='Refresh failed. Showing cached data.'}}finally{btn.classList.remove('spinning');document.getElementById('loadingOverlay').classList.add('hidden')}}
+function loadSample(){data=[{program:"LACOE",location:"Challenger Memorial Youth Center",dateRequested:"10/8/2025",projected:2,needed:2,subject:"ELA & Math",mode:"In Person",days:"Mon,Tue,Wed,Thu",startDate:"ASAP",payRate:"$22/hr"},{program:"LACOE",location:"Dorothy Kirby Center",dateRequested:"10/8/2025",projected:3,needed:1,subject:"ELA & Math",mode:"In Person",days:"Mon–Fri",startDate:"ASAP",payRate:"$22/hr"},{program:"LACOE",location:"Barry J. Nidorf",dateRequested:"11/1/2025",projected:4,needed:3,subject:"Math",mode:"In Person",days:"Mon,Wed,Fri",startDate:"11/15/2025",payRate:"$22/hr"},{program:"LACOE",location:"Los Padrinos Juvenile Hall",dateRequested:"11/5/2025",projected:2,needed:2,subject:"Science & Math",mode:"In Person",days:"Tue,Thu",startDate:"11/20/2025",payRate:"$22/hr"},{program:"LAUSD",location:"Fremont HS",dateRequested:"9/15/2025",projected:5,needed:3,subject:"Algebra I & II",mode:"In Person",days:"Mon–Thu",startDate:"10/1/2025",payRate:"$20/hr"},{program:"LAUSD",location:"Jefferson MS",dateRequested:"9/20/2025",projected:3,needed:2,subject:"ELA 7th & 8th",mode:"In Person",days:"Mon,Wed,Fri",startDate:"10/7/2025",payRate:"$20/hr"},{program:"LAUSD",location:"Manual Arts HS",dateRequested:"10/1/2025",projected:4,needed:4,subject:"Chemistry & Physics",mode:"In Person",days:"Mon,Tue,Thu,Fri",startDate:"10/15/2025",payRate:"$20/hr"},{program:"LAUSD",location:"South Gate MS",dateRequested:"10/10/2025",projected:2,needed:1,subject:"Math 6th",mode:"Virtual",days:"Tue,Thu",startDate:"10/21/2025",payRate:"$20/hr"},{program:"Compton USD",location:"Compton HS",dateRequested:"10/5/2025",projected:3,needed:3,subject:"ELA & Math",mode:"In Person",days:"Mon–Thu",startDate:"10/14/2025",payRate:"$21/hr"},{program:"Compton USD",location:"Whaley MS",dateRequested:"10/12/2025",projected:2,needed:1,subject:"Math 7th",mode:"Virtual",days:"Wed,Fri",startDate:"10/28/2025",payRate:"$21/hr"},{program:"Inglewood USD",location:"Inglewood HS",dateRequested:"10/8/2025",projected:4,needed:2,subject:"Algebra I",mode:"In Person",days:"Mon–Fri",startDate:"10/20/2025",payRate:"$20/hr"},{program:"Inglewood USD",location:"Crozier MS",dateRequested:"10/15/2025",projected:2,needed:2,subject:"ELA",mode:"In Person",days:"Mon,Wed,Fri",startDate:"11/1/2025",payRate:"$20/hr"},{program:"Lynwood USD",location:"Lynwood HS",dateRequested:"9/28/2025",projected:3,needed:1,subject:"Biology",mode:"In Person",days:"Tue,Thu",startDate:"10/7/2025",payRate:"$20/hr"},{program:"Lynwood USD",location:"Hosler MS",dateRequested:"10/20/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",days:"Mon,Wed,Fri",startDate:"11/3/2025",payRate:"$20/hr"},{program:"Centinela Valley",location:"Hawthorne HS",dateRequested:"10/3/2025",projected:2,needed:2,subject:"Geometry",mode:"In Person",days:"Mon,Tue,Thu",startDate:"10/14/2025",payRate:"$21/hr"},{program:"Centinela Valley",location:"Lawndale HS",dateRequested:"10/18/2025",projected:3,needed:1,subject:"ELA 9th & 10th",mode:"Virtual",days:"Tue,Thu",startDate:"11/1/2025",payRate:"$21/hr"},{program:"Pasadena USD",location:"Pasadena HS",dateRequested:"10/10/2025",projected:4,needed:2,subject:"AP Calculus",mode:"In Person",days:"Mon–Thu",startDate:"10/21/2025",payRate:"$23/hr"},{program:"Pasadena USD",location:"McKinley K-8",dateRequested:"10/25/2025",projected:2,needed:2,subject:"Reading 3rd-5th",mode:"In Person",days:"Mon,Wed,Fri",startDate:"11/10/2025",payRate:"$23/hr"},{program:"Pomona USD",location:"Pomona HS",dateRequested:"10/14/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",days:"Mon–Thu",startDate:"10/28/2025",payRate:"$20/hr"},{program:"Pomona USD",location:"Emerson MS",dateRequested:"10/22/2025",projected:2,needed:1,subject:"ELA 6th",mode:"Virtual",days:"Wed,Fri",startDate:"11/5/2025",payRate:"$20/hr"}];document.getElementById('lastUpdated').textContent='Sample Data';document.getElementById('statusBadge').innerHTML='Demo Mode';document.getElementById('statusBadge').className='badge badge-date'}
+function buildAll(){const p=[...new Set(data.map(d=>d.program))];p.forEach((v,i)=>{programColors[v]=palette[i%palette.length]});buildCards();buildCharts();buildFilters();renderTable()}
+function buildCards(){const tn=data.reduce((s,d)=>s+d.needed,0),tp=data.reduce((s,d)=>s+d.projected,0),pr=[...new Set(data.map(d=>d.program))],lo=[...new Set(data.map(d=>d.location))],ur=data.filter(d=>d.needed>=3).length,ip=data.filter(d=>d.mode.toLowerCase().includes('in person')).reduce((s,d)=>s+d.needed,0);document.getElementById('summaryCards').innerHTML=`<div class="card glass"><div class="card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="card-label">Total Tutors Needed</div><div class="card-value">${tn}</div><div class="card-sub">of ${tp} projected positions</div></div><div class="card glass"><div class="card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="card-label">Urgent (3+ Needed)</div><div class="card-value">${ur}</div><div class="card-sub">location${ur!==1?'s':''} with high demand</div></div><div class="card glass"><div class="card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="card-label">Active Programs</div><div class="card-value">${pr.length}</div><div class="card-sub">${lo.length} locations total</div></div><div class="card glass"><div class="card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div class="card-label">In-Person Needed</div><div class="card-value">${ip}</div><div class="card-sub">${tn?Math.round(ip/tn*100):0}% of open positions</div></div>`}
+let chartP,chartM;
+function buildCharts(){const pr=[...new Set(data.map(d=>d.program))],pn=pr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0)),co=pr.map(p=>programColors[p]);if(chartP)chartP.destroy();chartP=new Chart(document.getElementById('chartProgram').getContext('2d'),{type:'bar',data:{labels:pr,datasets:[{data:pn,backgroundColor:co.map(c=>c+'22'),borderColor:co,borderWidth:1.5,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9ca3af',font:{size:11,family:'Inter'}},grid:{display:false},border:{display:false}},y:{ticks:{color:'#9ca3af',font:{size:11},stepSize:2},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},beginAtZero:true}}}});const ml=['In Person','Virtual'],mv=ml.map(m=>data.filter(d=>d.mode.toLowerCase().includes(m.toLowerCase())).reduce((s,d)=>s+d.needed,0)),mc=['#3b6eb5','#2d8a4e'];if(chartM)chartM.destroy();chartM=new Chart(document.getElementById('chartMode').getContext('2d'),{type:'doughnut',data:{labels:ml,datasets:[{data:mv,backgroundColor:mc.map(c=>c+'33'),borderColor:mc,borderWidth:2,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:12,family:'Inter'},padding:16,usePointStyle:true,pointStyleWidth:10}}}}})}
+function buildFilters(){const pr=[...new Set(data.map(d=>d.program))].sort(),s=document.getElementById('filterProgram'),c=s.value;s.innerHTML='<option value="">All Programs</option>'+pr.map(p=>`<option value="${p}">${p}</option>`).join('');s.value=c}
+document.getElementById('searchInput').addEventListener('input',renderTable);
+document.getElementById('filterProgram').addEventListener('change',renderTable);
+document.getElementById('filterMode').addEventListener('change',renderTable);
+const columns=[{key:'program',label:'Program'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Requested'},{key:'projected',label:'Projected'},{key:'needed',label:'# Needed'},{key:'subject',label:'Grades / Subject'},{key:'mode',label:'Mode'},{key:'days',label:'Days'},{key:'startDate',label:'Start Date'},{key:'payRate',label:'Pay Rate'}];
+function buildTableHead(){document.getElementById('tableHead').innerHTML=columns.map(c=>`<th data-key="${c.key}" class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sort-arrow">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`).join('')}
+function sortTable(k){if(sortCol===k)sortAsc=!sortAsc;else{sortCol=k;sortAsc=true}renderTable()}
+function renderTable(){const s=document.getElementById('searchInput').value.toLowerCase(),pf=document.getElementById('filterProgram').value,mf=document.getElementById('filterMode').value;let f=data.filter(d=>{if(pf&&d.program!==pf)return false;if(mf&&!d.mode.toLowerCase().includes(mf.toLowerCase()))return false;if(s){const h=(d.location+d.subject+d.program+d.days+d.payRate).toLowerCase();if(!h.includes(s))return false}return true});if(sortCol)f.sort((a,b)=>{let va=a[sortCol],vb=b[sortCol];if(typeof va==='number')return sortAsc?va-vb:vb-va;va=(va||'').toString().toLowerCase();vb=(vb||'').toString().toLowerCase();return sortAsc?va.localeCompare(vb):vb.localeCompare(va)});buildTableHead();const tb=document.getElementById('tableBody');if(f.length===0){tb.innerHTML=`<tr><td colspan="${columns.length}"><div class="empty-state"><h3>No matching records</h3><p style="color:var(--text-dim);font-size:.85rem">Try adjusting your filters</p></div></td></tr>`;document.getElementById('rowCount').textContent='';return}tb.innerHTML=f.map(d=>{const nc=d.needed>=3?'needed-high':d.needed>=2?'needed-med':'needed-low',mc=d.mode.toLowerCase().includes('virtual')?'mode-virtual':'mode-inperson',pc=programColors[d.program]||'#c8232c';return`<tr><td><span class="program-tag" style="background:${pc}11;color:${pc}">${d.program}</span></td><td>${d.location}</td><td>${d.dateRequested}</td><td>${d.projected}</td><td class="${nc}">${d.needed}</td><td>${d.subject}</td><td><span class="mode-badge ${mc}">${d.mode}</span></td><td>${d.days}</td><td>${d.startDate}</td><td>${d.payRate}</td></tr>`}).join('');document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`}
 loadData();
 </script>
 </body>
