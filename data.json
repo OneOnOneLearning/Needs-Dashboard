@@ -1,0 +1,41 @@
+{
+  "updated": "Mar 3, 2026 — 7:00 AM",
+  "records": [
+    {
+      "program": "LACOE",
+      "location": "Challenger Memorial Youth Center",
+      "dateRequested": "10/8/2025",
+      "projected": 2,
+      "needed": 2,
+      "subject": "ELA & Math",
+      "mode": "In Person",
+      "days": "Mon,Tue,Wed,Thu",
+      "startDate": "ASAP",
+      "payRate": "$22/hr"
+    },
+    {
+      "program": "LACOE",
+      "location": "Dorothy Kirby Center",
+      "dateRequested": "10/8/2025",
+      "projected": 3,
+      "needed": 1,
+      "subject": "ELA & Math",
+      "mode": "In Person",
+      "days": "Mon,Tue,Wed,Thu,Fri",
+      "startDate": "ASAP",
+      "payRate": "$22/hr"
+    },
+    {
+      "program": "LAUSD",
+      "location": "Fremont HS",
+      "dateRequested": "9/15/2025",
+      "projected": 5,
+      "needed": 3,
+      "subject": "Algebra I & II",
+      "mode": "In Person",
+      "days": "Mon,Tue,Wed,Thu",
+      "startDate": "10/1/2025",
+      "payRate": "$20/hr"
+    }
+  ]
+}
