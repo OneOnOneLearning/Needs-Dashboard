@@ -256,7 +256,8 @@ function buildCards(){
 
 let chP,chF;
 function buildCharts(){
-  const pr=[...new Set(data.map(d=>d.program))],pn=pr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0)),co=pr.map(p=>progColors[p]);
+  const allPr=[...new Set(data.map(d=>d.program))],allPn=allPr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0));
+  const pr=[],pn=[],co=[];allPr.forEach((p,i)=>{if(allPn[i]>0){pr.push(p);pn.push(allPn[i]);co.push(progColors[p])}});
   if(chP)chP.destroy();
   chP=new Chart(document.getElementById('chartProgram').getContext('2d'),{type:'bar',data:{labels:pr,datasets:[{data:pn,backgroundColor:co.map(c=>c+'22'),borderColor:co,borderWidth:1.5,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9ca3af',font:{size:10,family:'Inter'}},grid:{display:false},border:{display:false}},y:{ticks:{color:'#9ca3af',font:{size:10},stepSize:2},grid:{color:'rgba(0,0,0,.04)'},border:{display:false},beginAtZero:true}}}});
 
