@@ -175,6 +175,12 @@ a.pt:hover{opacity:.7}
 <div class="glass" style="padding:24px;border-radius:var(--radius)">
 <h3 style="margin-bottom:16px">Needs Map</h3>
 <div id="needsMap" style="height:500px;border-radius:var(--radius-sm);overflow:hidden"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.78rem;color:var(--text-dim)">
+<span id="mapStatus">Loading map...</span>
+<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b6eb5;margin-right:4px"></span>1 needed
+<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d4930d;margin:0 4px 0 12px"></span>2 needed
+<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c8232c;margin:0 4px 0 12px"></span>3+ needed</span>
+</div>
 </div>
 </div>
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
@@ -395,22 +401,31 @@ function renderTable(){
   tb.innerHTML=html;
   document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`;
 }
-let needsMap=null,mapMarkers=[];
-const stateCoords={"FL":[27.9,-81.7],"CA":[36.7,-119.8],"AZ":[34.0,-111.1],"TX":[31.0,-100.0],"PA":[41.2,-77.2],"MA":[42.4,-71.4],"WI":[43.8,-88.8],"NV":[36.2,-115.1],"AR":[35.2,-91.8],"LA":[30.5,-91.2],"VA":[37.4,-79.1],"IL":[40.6,-89.4],"NM":[34.5,-105.9]};
-const programStateMap={"Arizona":"AZ","Arkansas":"AR","LACOE":"CA","LAUSD NON-PUBLIC":"CA","LAUSD PUBLIC":"CA","LBUSD":"CA","PASADENA":"CA","Pomona":"CA","Pomona Hiring Needs 25-26":"CA","Corona-Norco":"CA","Riverside NP":"CA","Riverside NP and San Bernardino NP Hiring Needs 25-26":"CA","San Bernardino":"CA","San Bernardino 2025 - 2026 Hiring Needs":"CA","Clark County":"NV","Texas":"TX","Sarasota":"FL","Sumter Co. FTA":"FL","Broward":"FL","Hillsborough":"FL","Lake County":"FL","Lake County NP -":"FL","Seminole":"FL","Seminole-":"FL","Lee County":"FL","Leon County":"FL","Marion County":"FL","Miami NP":"FL","Miami P":"FL","Miami Dade Charter":"FL","Miami Public HDT":"FL","Miami Public  HDT":"FL","Osceola NP":"FL","FL- Osceola NP -":"FL","Orange County":"FL","Osceola P":"FL","Osceola Public":"FL","Pasco":"FL","West Palm NP- Hiring needs":"FL","West Palm":"FL","Louisiana":"LA","Boston":"MA","Philly":"PA","Philly-":"PA","Philly OT":"PA","VA- Henrico":"VA","Milwaukee":"WI","Chicago":"IL","New Mexico":"NM","TANF Murrieta":"CA"};
+let needsMap=null,mapMarkers=[],geoCache={},geocodeQueue=[],geocoding=false;
 
-function buildMap(){
-  const fd=getFilteredForCharts();
-  const progNeeds={};
-  fd.forEach(d=>{
-    if(d.needed>0){
-      const k=d.program;
-      if(!progNeeds[k])progNeeds[k]={program:k,needed:0,projected:0,locations:[]};
-      progNeeds[k].needed+=d.needed;
-      progNeeds[k].projected+=d.projected;
-      if(d.location)progNeeds[k].locations.push(d.school||d.location);
+async function geocodeAddress(addr){
+  if(!addr||addr.length<5)return null;
+  const clean=addr.replace(/\\n/g,' ').replace(/\n/g,' ').trim();
+  if(geoCache[clean])return geoCache[clean];
+  if(geoCache[clean]===false)return null;
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(clean)}`,{headers:{'User-Agent':'OOOLDashboard/1.0'}});
+    const j=await r.json();
+    if(j&&j.length>0){const c=[parseFloat(j[0].lat),parseFloat(j[0].lon)];geoCache[clean]=c;return c;}
+    const parts=clean.split(',');
+    if(parts.length>=2){
+      const short=parts.slice(-2).join(',').trim();
+      const r2=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(short)}`,{headers:{'User-Agent':'OOOLDashboard/1.0'}});
+      const j2=await r2.json();
+      if(j2&&j2.length>0){const c=[parseFloat(j2[0].lat),parseFloat(j2[0].lon)];geoCache[clean]=c;return c;}
     }
-  });
+    geoCache[clean]=false;return null;
+  }catch(e){geoCache[clean]=false;return null;}
+}
+
+async function buildMap(){
+  const fd=getFilteredForCharts();
+  const rows=fd.filter(d=>d.needed>0&&d.location);
   if(!needsMap){
     needsMap=L.map('needsMap').setView([37.5,-96],4);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
@@ -419,22 +434,54 @@ function buildMap(){
   }
   mapMarkers.forEach(m=>needsMap.removeLayer(m));
   mapMarkers=[];
-  const entries=Object.values(progNeeds);
-  if(entries.length===0)return;
-  const maxNeed=Math.max(...entries.map(e=>e.needed),1);
-  entries.forEach(e=>{
-    const st=programStateMap[e.program];
-    if(!st||!stateCoords[st])return;
-    const [lat,lng]=stateCoords[st];
-    const jLat=lat+(Math.random()-.5)*1.5,jLng=lng+(Math.random()-.5)*1.5;
-    const r=Math.max(12,Math.min(40,(e.needed/maxNeed)*40));
-    const circle=L.circleMarker([jLat,jLng],{
-      radius:r,fillColor:'#c8232c',color:'#991b1b',weight:1.5,opacity:.9,fillOpacity:.35
-    }).addTo(needsMap);
-    const schools=e.locations.slice(0,5).join(', ');
-    circle.bindPopup(`<strong>${e.program}</strong><br>${e.needed} tutors needed<br><small>${schools}${e.locations.length>5?'...':''}</small>`);
-    mapMarkers.push(circle);
-  });
+  if(rows.length===0)return;
+  const mapStatus=document.getElementById('mapStatus');
+  if(mapStatus)mapStatus.textContent=`Mapping ${rows.length} locations...`;
+  let placed=0;
+  const bounds=[];
+  for(let i=0;i<rows.length;i++){
+    const d=rows[i];
+    const loc=d.location.replace(/\\n/g,' ').replace(/\n/g,' ').trim();
+    if(!loc||loc.length<5||loc.toLowerCase()==='all schools'||loc.toLowerCase().includes('substitute'))continue;
+    const coords=geoCache[loc]||geoCache[loc]===false?geoCache[loc]:null;
+    if(coords){
+      addMapMarker(d,coords);bounds.push(coords);placed++;
+    }else{
+      geocodeQueue.push({d,loc});
+    }
+  }
+  if(geocodeQueue.length>0&&!geocoding){
+    geocoding=true;
+    processGeocodeQueue(bounds,rows.length,placed,mapStatus);
+  }else{
+    if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
+    else if(bounds.length===1)needsMap.setView(bounds[0],10);
+    if(mapStatus)mapStatus.textContent=`${placed} locations mapped`;
+  }
+}
+
+async function processGeocodeQueue(bounds,total,placed,mapStatus){
+  while(geocodeQueue.length>0){
+    const {d,loc}=geocodeQueue.shift();
+    const coords=await geocodeAddress(loc);
+    if(coords){addMapMarker(d,coords);bounds.push(coords);placed++;}
+    if(mapStatus)mapStatus.textContent=`Mapping... ${placed} of ${total} (${geocodeQueue.length} remaining)`;
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  geocoding=false;
+  if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
+  else if(bounds.length===1)needsMap.setView(bounds[0],10);
+  if(mapStatus)mapStatus.textContent=`${placed} locations mapped`;
+}
+
+function addMapMarker(d,coords){
+  const r=Math.max(8,Math.min(25,d.needed*6));
+  const color=d.needed>=3?'#c8232c':d.needed>=2?'#d4930d':'#3b6eb5';
+  const circle=L.circleMarker(coords,{
+    radius:r,fillColor:color,color:color,weight:1.5,opacity:.9,fillOpacity:.3
+  }).addTo(needsMap);
+  circle.bindPopup(`<strong>${d.school||'Unknown'}</strong><br><span style="color:#666">${d.program}</span><br><strong>${d.needed}</strong> tutor${d.needed>1?'s':''} needed<br><small>${d.subject||''}</small><br><small>${d.location}</small>`);
+  mapMarkers.push(circle);
 }
 loadData();
 </script>
