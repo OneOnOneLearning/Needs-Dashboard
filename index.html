@@ -6,6 +6,8 @@
 <title>One on One Learning — Tutor Needs Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{--bg:#f4f6f9;--surface:rgba(255,255,255,0.55);--surface-hover:rgba(255,255,255,0.75);--border:rgba(255,255,255,0.6);--shadow:0 8px 32px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);--shadow-lg:0 16px 48px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);--text:#1a1f36;--text-dim:#6b7280;--text-light:#9ca3af;--red:#c8232c;--red-dim:rgba(200,35,44,0.08);--green:#2d8a4e;--green-dim:rgba(45,138,78,0.08);--navy:#1a1f36;--blue:#3b6eb5;--blue-dim:rgba(59,110,181,0.08);--amber:#d4930d;--amber-dim:rgba(212,147,13,0.08);--radius:20px;--radius-sm:12px;--blur:blur(20px) saturate(1.5)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -153,26 +155,33 @@ a.pt:hover{opacity:.7}
 <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
 <h2>All Open Positions</h2>
 <div class="view-toggle">
-<button class="vt-btn" onclick="setView('compact',this)">Compact</button>
 <button class="vt-btn active" onclick="setView('full',this)">Full Detail</button>
+<button class="vt-btn" onclick="setView('compact',this)">Compact</button>
 </div>
 </div>
 <div class="fl">
 <input class="fi" type="text" id="searchInput" placeholder="Search...">
 <select class="fs" id="filterProgram"><option value="">All Programs</option></select>
 <select class="fs" id="filterPC"><option value="">All PCs</option></select>
+<select class="fs" id="filterRDP"><option value="">All RDPs</option></select>
 <select class="fs" id="filterUrgent"><option value="">All Priorities</option><option value="asap">ASAP Only</option></select>
-<label style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;border:1px solid rgba(0,0,0,.08);background:var(--surface);backdrop-filter:var(--blur);font-size:.82rem;color:var(--text-dim);cursor:pointer;white-space:nowrap;user-select:none"><input type="checkbox" id="hideFilled" style="accent-color:var(--red);cursor:pointer"> Hide Filled</label>
+<label style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;border:1px solid rgba(0,0,0,.08);background:var(--surface);backdrop-filter:var(--blur);font-size:.82rem;color:var(--text-dim);cursor:pointer;white-space:nowrap;user-select:none"><input type="checkbox" id="hideFilled" checked style="accent-color:var(--red);cursor:pointer"> Hide Filled</label>
 </div>
 </div>
 <div class="tw"><table><thead><tr id="tableHead"></tr></thead><tbody id="tableBody"></tbody></table></div>
 <div class="rc" id="rowCount"></div>
 </div></div>
+<div class="fi-a" style="animation-delay:.4s;padding-top:20px">
+<div class="glass" style="padding:24px;border-radius:var(--radius)">
+<h3 style="margin-bottom:16px">Needs Map</h3>
+<div id="needsMap" style="height:500px;border-radius:var(--radius-sm);overflow:hidden"></div>
+</div>
+</div>
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
 </div>
 <script>
-const DATA_URL='data.json',PCS_URL='pcs.json';
-let data=[],pcMap={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
+const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json';
+let data=[],pcMap={},rdpMap={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
 const progColors={},pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
 
 function xlDate(v){if(!v||v==='')return'';const s=String(v).trim();if(s.toLowerCase()==='asap')return'ASAP';if(/^\d{4,5}$/.test(s)){const d=new Date((parseInt(s)-25569)*86400000);return d.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'})}return s}
@@ -182,6 +191,7 @@ function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=
 async function loadData(){
   document.getElementById('errorBanner').classList.remove('show');
   try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
+  try{const rr=await fetch(RDP_URL+'?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
   try{
     const r=await fetch(DATA_URL+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
     let raw=await r.text();raw=raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/\t/g,' ');
@@ -201,7 +211,7 @@ async function loadData(){
       certified:d.certified||d['Certified?']||'',nonNeg:d.nonNeg||d['Non-Negotiables']||'',
       notes:d.notes||d['Notes/Experience']||'',fileUrl:d.fileUrl||''
     }));
-    data.forEach(d=>{d.pc=pcMap[d.program]||''});
+    data.forEach(d=>{d.pc=pcMap[d.program]||'';d.rdp=rdpMap[d.program]||''});
     if(!document.getElementById('lastUpdated').textContent||document.getElementById('lastUpdated').textContent==='—')
       document.getElementById('lastUpdated').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     buildAll();
@@ -231,7 +241,7 @@ function loadSample(){
     {program:"Arizona",location:"Tempe, AZ",school:"McClintock HS",dateRequested:"10/20/2025",projected:2,needed:2,subject:"ELA",mode:"Virtual",mon:"",tues:"3:00-5:00",wed:"",thurs:"3:00-5:00",friday:"",weekends:"",startDate:"11/5/2025",payRate:"$19/hr",certified:"No",nonNeg:"",notes:"After school virtual",fileUrl:""},
     {program:"Pomona USD",location:"Pomona, CA",school:"Pomona HS",dateRequested:"10/14/2025",projected:3,needed:3,subject:"Math & ELA",mode:"In Person",mon:"x",tues:"x",wed:"x",thurs:"x",friday:"",weekends:"",startDate:"ASAP",payRate:"$20/hr",certified:"No",nonNeg:"Bilingual",notes:"Title I",fileUrl:""},
   ];
-  data.forEach(d=>{d.pc=pcMap[d.program]||''});
+  data.forEach(d=>{d.pc=pcMap[d.program]||'';d.rdp=rdpMap[d.program]||''});
   document.getElementById('lastUpdated').textContent='Sample Data';
   document.getElementById('statusBadge').innerHTML='Demo Mode';
   document.getElementById('statusBadge').className='bdg bdg-d';
@@ -240,31 +250,44 @@ function loadSample(){
 function buildAll(){
   const p=[...new Set(data.map(d=>d.program))];
   p.forEach((v,i)=>{progColors[v]=pal[i%pal.length]});
-  buildCards();buildCharts();buildFilters();renderTable();
+  buildCards();buildCharts();buildFilters();renderTable();setTimeout(buildMap,100);
+}
+function getFilteredForCharts(){
+  const rdpf=document.getElementById('filterRDP').value,
+    pf=document.getElementById('filterProgram').value,
+    pcf=document.getElementById('filterPC').value;
+  return data.filter(d=>{
+    if(rdpf&&d.rdp!==rdpf)return false;
+    if(pf&&d.program!==pf)return false;
+    if(pcf&&d.pc!==pcf)return false;
+    return true;
+  });
 }
 
 function buildCards(){
-  const tn=data.reduce((s,d)=>s+d.needed,0),tp=data.reduce((s,d)=>s+d.projected,0),
-    pr=[...new Set(data.map(d=>d.program))],lo=[...new Set(data.map(d=>d.school))],
-    urgCnt=data.filter(d=>isUrgent(d)).length,
-    pcs=[...new Set(Object.values(pcMap))].filter(Boolean).length,
+  const fd=getFilteredForCharts();
+  const tn=fd.reduce((s,d)=>s+d.needed,0),tp=fd.reduce((s,d)=>s+d.projected,0),
+    pr=[...new Set(fd.map(d=>d.program))],lo=[...new Set(fd.map(d=>d.school))],
+    urgCnt=fd.filter(d=>isUrgent(d)).length,
+    pcs=[...new Set(fd.map(d=>d.pc))].filter(Boolean).length,
     fillPct=tp?Math.round((tp-tn)/tp*100):0;
   document.getElementById('summaryCards').innerHTML=
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="cl">Total Tutors Needed</div><div class="cv">${tn}</div><div class="cs">of ${tp} projected</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
+    `<div class="card glass" style="cursor:pointer" onclick="document.getElementById('filterUrgent').value='asap';renderTable();this.style.outline='2px solid var(--red)'"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="cl">Active Programs</div><div class="cv">${pr.length}</div><div class="cs">${lo.length} schools &middot; ${pcs} PCs</div></div>`+
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${fillPct}%</div><div class="cs">${tp-tn} of ${tp} filled</div></div>`;
 }
 
 let chP,chF;
 function buildCharts(){
-  const allPr=[...new Set(data.map(d=>d.program))],allPn=allPr.map(p=>data.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0));
+  const fd=getFilteredForCharts();
+  const allPr=[...new Set(fd.map(d=>d.program))],allPn=allPr.map(p=>fd.filter(d=>d.program===p).reduce((s,d)=>s+d.needed,0));
   const pr=[],pn=[],co=[];allPr.forEach((p,i)=>{if(allPn[i]>0){pr.push(p);pn.push(allPn[i]);co.push(progColors[p])}});
   if(chP)chP.destroy();
   chP=new Chart(document.getElementById('chartProgram').getContext('2d'),{type:'bar',data:{labels:pr,datasets:[{data:pn,backgroundColor:co.map(c=>c+'22'),borderColor:co,borderWidth:1.5,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9ca3af',font:{size:10,family:'Inter'}},grid:{display:false},border:{display:false}},y:{ticks:{color:'#9ca3af',font:{size:10},stepSize:2},grid:{color:'rgba(0,0,0,.04)'},border:{display:false},beginAtZero:true}}}});
 
   // Fill rate doughnut
-  const tp=data.reduce((s,d)=>s+d.projected,0),tn=data.reduce((s,d)=>s+d.needed,0),filled=tp-tn,pct=tp?Math.round(filled/tp*100):0;
+  const tp=fd.reduce((s,d)=>s+d.projected,0),tn=fd.reduce((s,d)=>s+d.needed,0),filled=tp-tn,pct=tp?Math.round(filled/tp*100):0;
   if(chF)chF.destroy();
   chF=new Chart(document.getElementById('chartFill').getContext('2d'),{
     type:'doughnut',
@@ -279,10 +302,14 @@ function buildFilters(){
   s.innerHTML='<option value="">All Programs</option>'+pr.map(p=>`<option value="${p}">${p}</option>`).join('');s.value=c;
   const pcs=[...new Set(Object.values(pcMap))].filter(Boolean).sort(),ps=document.getElementById('filterPC'),pc=ps.value;
   ps.innerHTML='<option value="">All PCs</option>'+pcs.map(p=>`<option value="${p}">${p}</option>`).join('');ps.value=pc;
+  const rdps=[...new Set(Object.values(rdpMap))].filter(Boolean).sort(),rs=document.getElementById('filterRDP'),rc=rs.value;
+  rs.innerHTML='<option value="">All RDPs</option>'+rdps.map(r=>`<option value="${r}">${r}</option>`).join('');rs.value=rc;
 }
 document.getElementById('searchInput').addEventListener('input',renderTable);
-document.getElementById('filterProgram').addEventListener('change',renderTable);
-document.getElementById('filterPC').addEventListener('change',renderTable);
+function onFilterChange(){buildCards();buildCharts();renderTable();buildMap()}
+document.getElementById('filterProgram').addEventListener('change',onFilterChange);
+document.getElementById('filterPC').addEventListener('change',onFilterChange);
+document.getElementById('filterRDP').addEventListener('change',onFilterChange);
 document.getElementById('filterUrgent').addEventListener('change',renderTable);
 document.getElementById('hideFilled').addEventListener('change',renderTable);
 
@@ -301,8 +328,8 @@ function fmtSched(d){
 function fmtCert(v){if(!v)return'<span class="cert-n">—</span>';const s=v.toString().toLowerCase();if(s==='yes'||s==='y')return'<span class="cert-y">Yes</span>';if(s==='no'||s==='n')return'<span class="cert-n">No</span>';return`<span class="cert-n">${v}</span>`}
 function fmtStart(d){if(isUrgent(d))return'<span class="urgent-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>ASAP</span>';return d.startDate||'—'}
 
-const compactCols=[{key:'program',label:'Program'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
-const fullCols=[{key:'program',label:'Program'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
+const compactCols=[{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
+const fullCols=[{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
 function getCols(){return viewMode==='compact'?compactCols:fullCols}
 
 function buildTableHead(){document.getElementById('tableHead').innerHTML=getCols().map(c=>{if(c.key==='expand'||c.key==='schedule')return`<th>${c.label}</th>`;return`<th class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sa">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`}).join('')}
@@ -313,14 +340,16 @@ function renderTable(){
   const s=document.getElementById('searchInput').value.toLowerCase(),
     pf=document.getElementById('filterProgram').value,
     pcf=document.getElementById('filterPC').value,
+    rdpf=document.getElementById('filterRDP').value,
     uf=document.getElementById('filterUrgent').value,
     hf=document.getElementById('hideFilled').checked;
   let f=data.filter(d=>{
     if(pf&&d.program!==pf)return false;
     if(pcf&&d.pc!==pcf)return false;
+    if(rdpf&&d.rdp!==rdpf)return false;
     if(uf==='asap'&&!isUrgent(d))return false;
     if(hf&&d.needed<=0)return false;
-    if(s){const h=(d.location+d.school+d.subject+d.program+d.notes+d.nonNeg+d.pc).toLowerCase();if(!h.includes(s))return false}
+    if(s){const h=(d.location+d.school+d.subject+d.program+d.notes+d.nonNeg+d.pc+d.rdp).toLowerCase();if(!h.includes(s))return false}
     return true;
   });
   if(sortCol)f.sort((a,b)=>{let va=a[sortCol],vb=b[sortCol];if(typeof va==='number')return sortAsc?va-vb:vb-va;va=(va||'').toString().toLowerCase();vb=(vb||'').toString().toLowerCase();return sortAsc?va.localeCompare(vb):vb.localeCompare(va)});
@@ -335,7 +364,7 @@ function renderTable(){
       ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`;
     if(viewMode==='compact'){
       html+=`<tr${urg?' class="urgent-row"':''}>`;
-      html+=`<td>${ptag}</td><td class="pc-cell">${d.pc||'—'}</td>`;
+      html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
       html+=`<td class="${nc}">${d.needed}</td><td>${d.subject||'—'}</td>`;
       html+=`<td style="min-width:180px">${fmtSched(d)}</td>`;
@@ -352,8 +381,8 @@ function renderTable(){
         html+=`</div></td></tr>`;
       }
     }else{
-      html+=`<tr${urg?' class="urgent-row"':''}>`;
-      html+=`<td>${ptag}</td><td class="pc-cell">${d.pc||'—'}</td>`;
+      html+=`<tr${urg?' class="urgent-row"':''}>`; 
+      html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
       html+=`<td>${d.dateRequested||'—'}</td><td>${d.projected}</td><td class="${nc}">${d.needed}</td>`;
       html+=`<td>${d.subject||'—'}</td><td><span class="mb ${mc}">${d.mode||'—'}</span></td>`;
@@ -365,6 +394,47 @@ function renderTable(){
   });
   tb.innerHTML=html;
   document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`;
+}
+let needsMap=null,mapMarkers=[];
+const stateCoords={"FL":[27.9,-81.7],"CA":[36.7,-119.8],"AZ":[34.0,-111.1],"TX":[31.0,-100.0],"PA":[41.2,-77.2],"MA":[42.4,-71.4],"WI":[43.8,-88.8],"NV":[36.2,-115.1],"AR":[35.2,-91.8],"LA":[30.5,-91.2],"VA":[37.4,-79.1],"IL":[40.6,-89.4],"NM":[34.5,-105.9]};
+const programStateMap={"Arizona":"AZ","Arkansas":"AR","LACOE":"CA","LAUSD NON-PUBLIC":"CA","LAUSD PUBLIC":"CA","LBUSD":"CA","PASADENA":"CA","Pomona":"CA","Pomona Hiring Needs 25-26":"CA","Corona-Norco":"CA","Riverside NP":"CA","Riverside NP and San Bernardino NP Hiring Needs 25-26":"CA","San Bernardino":"CA","San Bernardino 2025 - 2026 Hiring Needs":"CA","Clark County":"NV","Texas":"TX","Sarasota":"FL","Sumter Co. FTA":"FL","Broward":"FL","Hillsborough":"FL","Lake County":"FL","Lake County NP -":"FL","Seminole":"FL","Seminole-":"FL","Lee County":"FL","Leon County":"FL","Marion County":"FL","Miami NP":"FL","Miami P":"FL","Miami Dade Charter":"FL","Miami Public HDT":"FL","Miami Public  HDT":"FL","Osceola NP":"FL","FL- Osceola NP -":"FL","Orange County":"FL","Osceola P":"FL","Osceola Public":"FL","Pasco":"FL","West Palm NP- Hiring needs":"FL","West Palm":"FL","Louisiana":"LA","Boston":"MA","Philly":"PA","Philly-":"PA","Philly OT":"PA","VA- Henrico":"VA","Milwaukee":"WI","Chicago":"IL","New Mexico":"NM","TANF Murrieta":"CA"};
+
+function buildMap(){
+  const fd=getFilteredForCharts();
+  const progNeeds={};
+  fd.forEach(d=>{
+    if(d.needed>0){
+      const k=d.program;
+      if(!progNeeds[k])progNeeds[k]={program:k,needed:0,projected:0,locations:[]};
+      progNeeds[k].needed+=d.needed;
+      progNeeds[k].projected+=d.projected;
+      if(d.location)progNeeds[k].locations.push(d.school||d.location);
+    }
+  });
+  if(!needsMap){
+    needsMap=L.map('needsMap').setView([37.5,-96],4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+      attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:18
+    }).addTo(needsMap);
+  }
+  mapMarkers.forEach(m=>needsMap.removeLayer(m));
+  mapMarkers=[];
+  const entries=Object.values(progNeeds);
+  if(entries.length===0)return;
+  const maxNeed=Math.max(...entries.map(e=>e.needed),1);
+  entries.forEach(e=>{
+    const st=programStateMap[e.program];
+    if(!st||!stateCoords[st])return;
+    const [lat,lng]=stateCoords[st];
+    const jLat=lat+(Math.random()-.5)*1.5,jLng=lng+(Math.random()-.5)*1.5;
+    const r=Math.max(12,Math.min(40,(e.needed/maxNeed)*40));
+    const circle=L.circleMarker([jLat,jLng],{
+      radius:r,fillColor:'#c8232c',color:'#991b1b',weight:1.5,opacity:.9,fillOpacity:.35
+    }).addTo(needsMap);
+    const schools=e.locations.slice(0,5).join(', ');
+    circle.bindPopup(`<strong>${e.program}</strong><br>${e.needed} tutors needed<br><small>${schools}${e.locations.length>5?'...':''}</small>`);
+    mapMarkers.push(circle);
+  });
 }
 loadData();
 </script>
