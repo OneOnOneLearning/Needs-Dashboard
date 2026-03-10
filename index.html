@@ -186,18 +186,22 @@ a.pt:hover{opacity:.7}
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
 </div>
 <script>
-const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json';
-let data=[],pcMap={},rdpMap={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
+const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',GEOCACHE_URL='geocache.json',ASAP_URL='asap-flags.json';
+const GH_TOKEN='PASTE_YOUR_TOKEN_HERE',GH_REPO='OneOnOneLearning/Needs-Dashboard';
+let data=[],pcMap={},rdpMap={},asapFlags={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
 const progColors={},pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
 
 function xlDate(v){if(!v||v==='')return'';const s=String(v).trim();if(s.toLowerCase()==='asap')return'ASAP';if(/^\d{4,5}$/.test(s)){const d=new Date((parseInt(s)-25569)*86400000);return d.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'})}return s}
-function isUrgent(d){return(d.startDate||'').toString().toLowerCase().includes('asap')}
+function getRowKey(d){return(d.program+'|'+d.school+'|'+d.location).replace(/\s+/g,' ').trim()}
+function isUrgent(d){return !!asapFlags[getRowKey(d)]}
 function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');expandedRows.clear();renderTable()}
 
 async function loadData(){
   document.getElementById('errorBanner').classList.remove('show');
   try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{const rr=await fetch(RDP_URL+'?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
+  try{const gr=await fetch(GEOCACHE_URL+'?t='+Date.now());if(gr.ok){const gc=await gr.json();Object.assign(geoCache,gc)}}catch(e){}
+  try{const ar=await fetch(ASAP_URL+'?t='+Date.now());if(ar.ok)asapFlags=await ar.json()}catch(e){asapFlags={}}
   try{
     const r=await fetch(DATA_URL+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
     let raw=await r.text();raw=raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/\t/g,' ');
@@ -334,11 +338,11 @@ function fmtSched(d){
 function fmtCert(v){if(!v)return'<span class="cert-n">—</span>';const s=v.toString().toLowerCase();if(s==='yes'||s==='y')return'<span class="cert-y">Yes</span>';if(s==='no'||s==='n')return'<span class="cert-n">No</span>';return`<span class="cert-n">${v}</span>`}
 function fmtStart(d){if(isUrgent(d))return'<span class="urgent-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>ASAP</span>';return d.startDate||'—'}
 
-const compactCols=[{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
-const fullCols=[{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
+const compactCols=[{key:'asap',label:'⚠️'},{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
+const fullCols=[{key:'asap',label:'⚠️'},{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
 function getCols(){return viewMode==='compact'?compactCols:fullCols}
 
-function buildTableHead(){document.getElementById('tableHead').innerHTML=getCols().map(c=>{if(c.key==='expand'||c.key==='schedule')return`<th>${c.label}</th>`;return`<th class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sa">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`}).join('')}
+function buildTableHead(){document.getElementById('tableHead').innerHTML=getCols().map(c=>{if(c.key==='expand'||c.key==='schedule')return`<th>${c.label}</th>`;if(c.key==='asap')return`<th style="text-align:center;width:50px">${c.label}</th>`;return`<th class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sa">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`}).join('')}
 function sortTable(k){if(sortCol===k)sortAsc=!sortAsc;else{sortCol=k;sortAsc=true}renderTable()}
 function toggleRow(i){if(expandedRows.has(i))expandedRows.delete(i);else expandedRows.add(i);renderTable()}
 
@@ -364,12 +368,15 @@ function renderTable(){
   if(f.length===0){tb.innerHTML=`<tr><td colspan="${cols.length}"><div class="es"><h3>No matching records</h3><p style="color:var(--text-dim);font-size:.85rem">Try adjusting your filters</p></div></td></tr>`;document.getElementById('rowCount').textContent='';return}
   let html='';
   f.forEach((d,i)=>{
+    const di=data.indexOf(d);
     const nc=d.needed>=3?'nh':d.needed>=2?'nm':'nl',
       mc=d.mode.toLowerCase().includes('virtual')?'m-v':'m-ip',
       c=progColors[d.program]||'#c8232c',urg=isUrgent(d),
-      ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`;
+      ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`,
+      asapBtn=`<td style="text-align:center"><button onclick="toggleAsap(${di})" style="background:${urg?'var(--red)':'transparent'};color:${urg?'white':'var(--text-light)'};border:1px solid ${urg?'var(--red)':'rgba(0,0,0,.12)'};border-radius:100px;padding:3px 8px;font-size:.7rem;cursor:pointer;font-weight:600;transition:all .2s">${urg?'ASAP':'—'}</button></td>`;
     if(viewMode==='compact'){
       html+=`<tr${urg?' class="urgent-row"':''}>`;
+      html+=asapBtn;
       html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
       html+=`<td class="${nc}">${d.needed}</td><td>${d.subject||'—'}</td>`;
@@ -388,6 +395,7 @@ function renderTable(){
       }
     }else{
       html+=`<tr${urg?' class="urgent-row"':''}>`; 
+      html+=asapBtn;
       html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
       html+=`<td>${d.dateRequested||'—'}</td><td>${d.projected}</td><td class="${nc}">${d.needed}</td>`;
@@ -401,27 +409,31 @@ function renderTable(){
   tb.innerHTML=html;
   document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`;
 }
-let needsMap=null,mapMarkers=[],geoCache={},geocodeQueue=[],geocoding=false;
+let needsMap=null,mapMarkers=[],geoCache={},geocoding=false,newGeocodes=0;
+
+function cleanAddr(a){return(a||'').replace(/\\n/g,' ').replace(/\n/g,' ').replace(/[\r\t]/g,' ').replace(/\s+/g,' ').trim()}
 
 async function geocodeAddress(addr){
-  if(!addr||addr.length<5)return null;
-  const clean=addr.replace(/\\n/g,' ').replace(/\n/g,' ').trim();
-  if(geoCache[clean])return geoCache[clean];
-  if(geoCache[clean]===false)return null;
+  const clean=cleanAddr(addr);
+  if(!clean||clean.length<5)return null;
+  if(geoCache[clean]&&geoCache[clean]!=='miss')return geoCache[clean];
+  if(geoCache[clean]==='miss')return null;
   try{
     const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(clean)}`,{headers:{'User-Agent':'OOOLDashboard/1.0'}});
     const j=await r.json();
-    if(j&&j.length>0){const c=[parseFloat(j[0].lat),parseFloat(j[0].lon)];geoCache[clean]=c;return c;}
+    if(j&&j.length>0){const c=[parseFloat(j[0].lat),parseFloat(j[0].lon)];geoCache[clean]=c;newGeocodes++;return c;}
     const parts=clean.split(',');
     if(parts.length>=2){
       const short=parts.slice(-2).join(',').trim();
       const r2=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(short)}`,{headers:{'User-Agent':'OOOLDashboard/1.0'}});
       const j2=await r2.json();
-      if(j2&&j2.length>0){const c=[parseFloat(j2[0].lat),parseFloat(j2[0].lon)];geoCache[clean]=c;return c;}
+      if(j2&&j2.length>0){const c=[parseFloat(j2[0].lat),parseFloat(j2[0].lon)];geoCache[clean]=c;newGeocodes++;return c;}
     }
-    geoCache[clean]=false;return null;
-  }catch(e){geoCache[clean]=false;return null;}
+    geoCache[clean]='miss';return null;
+  }catch(e){return null;}
 }
+
+async function saveGeocache(){}
 
 async function buildMap(){
   const fd=getFilteredForCharts();
@@ -434,46 +446,61 @@ async function buildMap(){
   }
   mapMarkers.forEach(m=>needsMap.removeLayer(m));
   mapMarkers=[];
-  if(rows.length===0)return;
+  if(rows.length===0){document.getElementById('mapStatus').textContent='No locations with needs';return;}
   const mapStatus=document.getElementById('mapStatus');
-  if(mapStatus)mapStatus.textContent=`Mapping ${rows.length} locations...`;
-  let placed=0;
   const bounds=[];
-  for(let i=0;i<rows.length;i++){
-    const d=rows[i];
-    const loc=d.location.replace(/\\n/g,' ').replace(/\n/g,' ').trim();
-    if(!loc||loc.length<5||loc.toLowerCase()==='all schools'||loc.toLowerCase().includes('substitute'))continue;
-    const coords=geoCache[loc]||geoCache[loc]===false?geoCache[loc]:null;
-    if(coords){
-      addMapMarker(d,coords);bounds.push(coords);placed++;
-    }else{
-      geocodeQueue.push({d,loc});
+  let placed=0,uncached=[];
+  rows.forEach(d=>{
+    const loc=cleanAddr(d.location);
+    if(!loc||loc.length<5||loc.toLowerCase()==='all schools'||loc.toLowerCase().includes('substitute'))return;
+    const cached=geoCache[loc];
+    if(cached&&cached!=='miss'&&Array.isArray(cached)){
+      addMapMarker(d,cached);bounds.push(cached);placed++;
+    }else if(!cached){
+      uncached.push({d,loc});
     }
-  }
-  if(geocodeQueue.length>0&&!geocoding){
+  });
+  if(mapStatus)mapStatus.textContent=placed>0?`${placed} locations mapped`+(uncached.length>0?`, geocoding ${uncached.length} new...`:''):`Geocoding ${uncached.length} locations...`;
+  if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
+  else if(bounds.length===1)needsMap.setView(bounds[0],10);
+  if(uncached.length>0&&!geocoding){
     geocoding=true;
-    processGeocodeQueue(bounds,rows.length,placed,mapStatus);
-  }else{
+    for(let i=0;i<uncached.length;i++){
+      const {d,loc}=uncached[i];
+      const coords=await geocodeAddress(loc);
+      if(coords){addMapMarker(d,coords);bounds.push(coords);placed++;}
+      if(mapStatus)mapStatus.textContent=`Geocoding... ${i+1}/${uncached.length} (${placed} mapped)`;
+      if(i<uncached.length-1)await new Promise(r=>setTimeout(r,1100));
+    }
+    geocoding=false;
     if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
     else if(bounds.length===1)needsMap.setView(bounds[0],10);
     if(mapStatus)mapStatus.textContent=`${placed} locations mapped`;
+    // geocache pre-built
   }
 }
 
-async function processGeocodeQueue(bounds,total,placed,mapStatus){
-  while(geocodeQueue.length>0){
-    const {d,loc}=geocodeQueue.shift();
-    const coords=await geocodeAddress(loc);
-    if(coords){addMapMarker(d,coords);bounds.push(coords);placed++;}
-    if(mapStatus)mapStatus.textContent=`Mapping... ${placed} of ${total} (${geocodeQueue.length} remaining)`;
-    await new Promise(r=>setTimeout(r,1100));
-  }
-  geocoding=false;
-  if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
-  else if(bounds.length===1)needsMap.setView(bounds[0],10);
-  if(mapStatus)mapStatus.textContent=`${placed} locations mapped`;
+async function toggleAsap(idx){
+  const d=data[idx];if(!d)return;
+  const key=getRowKey(d);
+  if(asapFlags[key])delete asapFlags[key];else asapFlags[key]=true;
+  buildCards();buildCharts();renderTable();buildMap();
+  saveAsapFlags();
 }
-
+let asapSha='';
+async function saveAsapFlags(){
+  try{
+    const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
+    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';}
+    const body={message:'Update ASAP flags',content:btoa(unescape(encodeURIComponent(JSON.stringify(asapFlags,null,2))))};
+    if(asapSha)body.sha=asapSha;
+    const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{
+      method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
+      body:JSON.stringify(body)
+    });
+    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';}
+  }catch(e){console.log('ASAP save error:',e)}
+}
 function addMapMarker(d,coords){
   const r=Math.max(8,Math.min(25,d.needed*6));
   const color=d.needed>=3?'#c8232c':d.needed>=2?'#d4930d':'#3b6eb5';
