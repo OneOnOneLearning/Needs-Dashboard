@@ -202,7 +202,10 @@ async function loadData(){
   try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{const rr=await fetch(RDP_URL+'?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
   try{const gr=await fetch(GEOCACHE_URL+'?t='+Date.now());if(gr.ok){const gc=await gr.json();Object.assign(geoCache,gc)}}catch(e){}
-  try{const ar=await fetch(ASAP_URL+'?t='+Date.now());if(ar.ok)asapFlags=await ar.json()}catch(e){asapFlags={}}
+  try{
+    const ar=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
+    if(ar.ok){const aj=await ar.json();if(aj.content){asapFlags=JSON.parse(atob(aj.content.replace(/\n/g,'')));}}
+  }catch(e){asapFlags={}}
   try{
     const r=await fetch(DATA_URL+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
     let raw=await r.text();raw=raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/\t/g,' ');
