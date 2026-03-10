@@ -467,20 +467,8 @@ async function buildMap(){
   if(mapStatus)mapStatus.textContent=placed>0?`${placed} locations mapped`+(uncached.length>0?`, geocoding ${uncached.length} new...`:''):`Geocoding ${uncached.length} locations...`;
   if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
   else if(bounds.length===1)needsMap.setView(bounds[0],10);
-  if(uncached.length>0&&!geocoding){
-    geocoding=true;
-    for(let i=0;i<uncached.length;i++){
-      const {d,loc}=uncached[i];
-      const coords=await geocodeAddress(loc);
-      if(coords){addMapMarker(d,coords);bounds.push(coords);placed++;}
-      if(mapStatus)mapStatus.textContent=`Geocoding... ${i+1}/${uncached.length} (${placed} mapped)`;
-      if(i<uncached.length-1)await new Promise(r=>setTimeout(r,1100));
-    }
-    geocoding=false;
-    if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
-    else if(bounds.length===1)needsMap.setView(bounds[0],10);
-    if(mapStatus)mapStatus.textContent=`${placed} locations mapped`;
-    // geocache pre-built
+  if(uncached.length>0){
+    if(mapStatus)mapStatus.textContent=`${placed} locations mapped (${uncached.length} not in geocache)`;
   }
 }
 
@@ -494,22 +482,16 @@ async function toggleAsap(idx){
 let asapSha='';
 async function saveAsapFlags(){
   const tk=getGHToken();
-  console.log('Token length:',tk?tk.length:'NO TOKEN');
-  console.log('Flags to save:',JSON.stringify(asapFlags));
   try{
     const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
-    console.log('GET status:',gr.status);
-    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';console.log('SHA:',asapSha);}
-    else{const et=await gr.text();console.log('GET error:',et);}
+    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';}
     const body={message:'Update ASAP flags',content:btoa(unescape(encodeURIComponent(JSON.stringify(asapFlags,null,2))))};
     if(asapSha)body.sha=asapSha;
     const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{
       method:'PUT',headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
       body:JSON.stringify(body)
     });
-    console.log('PUT status:',pr.status);
-    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';console.log('Saved OK!');}
-    else{const et=await pr.text();console.log('PUT error:',et);}
+    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';}
   }catch(e){console.log('ASAP save error:',e)}
 }
 function addMapMarker(d,coords){
