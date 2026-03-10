@@ -490,16 +490,23 @@ async function toggleAsap(idx){
 }
 let asapSha='';
 async function saveAsapFlags(){
+  const tk=getGHToken();
+  console.log('Token length:',tk?tk.length:'NO TOKEN');
+  console.log('Flags to save:',JSON.stringify(asapFlags));
   try{
-    const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Authorization':'Bearer '+getGHToken(),'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
-    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';}
+    const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
+    console.log('GET status:',gr.status);
+    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';console.log('SHA:',asapSha);}
+    else{const et=await gr.text();console.log('GET error:',et);}
     const body={message:'Update ASAP flags',content:btoa(unescape(encodeURIComponent(JSON.stringify(asapFlags,null,2))))};
     if(asapSha)body.sha=asapSha;
     const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{
-      method:'PUT',headers:{'Authorization':'Bearer '+getGHToken(),'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
+      method:'PUT',headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
       body:JSON.stringify(body)
     });
-    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';}
+    console.log('PUT status:',pr.status);
+    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';console.log('Saved OK!');}
+    else{const et=await pr.text();console.log('PUT error:',et);}
   }catch(e){console.log('ASAP save error:',e)}
 }
 function addMapMarker(d,coords){
