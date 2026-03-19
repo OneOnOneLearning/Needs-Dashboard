@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <style>
 :root{--bg:#f4f6f9;--surface:rgba(255,255,255,0.55);--surface-hover:rgba(255,255,255,0.75);--border:rgba(255,255,255,0.6);--shadow:0 8px 32px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);--shadow-lg:0 16px 48px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);--text:#1a1f36;--text-dim:#6b7280;--text-light:#9ca3af;--red:#c8232c;--red-dim:rgba(200,35,44,0.08);--green:#2d8a4e;--green-dim:rgba(45,138,78,0.08);--navy:#1a1f36;--blue:#3b6eb5;--blue-dim:rgba(59,110,181,0.08);--amber:#d4930d;--amber-dim:rgba(212,147,13,0.08);--radius:20px;--radius-sm:12px;--blur:blur(20px) saturate(1.5)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -130,14 +131,25 @@ a.pt:hover{opacity:.7}
 </style>
 </head>
 <body>
-<div class="lo" id="lo"><div class="sp"></div><p>Loading dashboard...</p></div>
-<div class="pw">
+<div id="loginScreen" style="position:fixed;inset:0;background:linear-gradient(160deg,#f0f2f6 0%,#e8edf5 30%,#f5f0ee 60%,#f2f4f7 100%);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Inter',sans-serif">
+<img src="https://cdn.prod.website-files.com/6511d86dcc6ffe4be8b3e3c0/67a51d3a089fcce7d3a59514_2a1058a3dbdbabadadb72530baf47dea_oneononelearning.svg" style="height:60px;margin-bottom:24px" onerror="this.style.display='none'">
+<h2 style="color:#1a1f36;margin-bottom:8px">Tutor Needs Dashboard</h2>
+<p style="color:#6b7280;margin-bottom:32px;font-size:.9rem">Sign in with your One on One Learning account</p>
+<button onclick="signIn()" style="display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border-radius:8px;border:1px solid #d1d5db;background:white;color:#1a1f36;font-family:inherit;font-size:.95rem;font-weight:500;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1);transition:all .2s">
+<svg width="20" height="20" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
+Sign in with Microsoft</button>
+<p id="loginError" style="color:#c8232c;margin-top:16px;font-size:.85rem;display:none"></p>
+</div>
+<div class="lo" id="lo" style="display:none"><div class="sp"></div><p>Loading dashboard...</p></div>
+<div class="pw" id="dashboardContent" style="display:none">
 <div class="hd fi-a">
 <div class="hd-l">
 <img class="logo" src="https://cdn.prod.website-files.com/6511d86dcc6ffe4be8b3e3c0/67a51d3a089fcce7d3a59514_2a1058a3dbdbabadadb72530baf47dea_oneononelearning.svg" alt="OOOL" onerror="this.style.display='none'">
 <div class="hd-t"><h1>Tutor Needs Dashboard</h1></div>
 </div>
 <div class="hd-r">
+<span id="userInfo" style="font-size:.8rem;color:var(--text-dim);margin-right:8px"></span>
+<button onclick="signOut()" style="padding:5px 12px;border-radius:100px;border:1px solid rgba(0,0,0,.08);background:var(--surface);font-size:.75rem;color:var(--text-dim);cursor:pointer;font-family:inherit">Sign Out</button>
 <span class="bdg bdg-live" id="statusBadge">Auto-Updated</span>
 <span class="bdg bdg-d" id="lastUpdated">—</span>
 
@@ -186,6 +198,44 @@ a.pt:hover{opacity:.7}
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
 </div>
 <script>
+const msalConfig={auth:{clientId:'f3d0a7b8-0eee-456f-9758-da7bc1296a94',authority:'https://login.microsoftonline.com/24ab4d38-cbff-431e-b383-3bd64b05be87',redirectUri:window.location.origin+window.location.pathname},cache:{cacheLocation:'sessionStorage'}};
+const msalInstance=new msal.PublicClientApplication(msalConfig);
+let currentUser=null,userRole=null,userRdp=null;
+
+const adminEmails=['msuarez@oneononelearning.com','igrande@oneononelearning.com','rmatos@oneononelearning.com','jfuentes@oneononelearning.com','nreaser@oneononelearning.com','mmonnar@oneononelearning.com','arau@oneononelearning.com'];
+const rdpEmails={'kberry@oneononelearning.com':'Karin','jlove@oneononelearning.com':'Jennifer','mhill@oneononelearning.com':'Malorie','llandera@oneononelearning.com':'Malorie'};
+
+async function initAuth(){
+  try{
+    const resp=await msalInstance.handleRedirectPromise();
+    if(resp){handleLoginSuccess(resp.account);return;}
+    const accounts=msalInstance.getAllAccounts();
+    if(accounts.length>0){handleLoginSuccess(accounts[0]);return;}
+  }catch(e){console.log('Auth init:',e)}
+}
+
+function handleLoginSuccess(account){
+  currentUser=account;
+  const email=(account.username||'').toLowerCase();
+  if(adminEmails.includes(email)){userRole='admin';userRdp=null;}
+  else if(rdpEmails[email]){userRole='rdp';userRdp=rdpEmails[email];}
+  else{userRole='viewer';userRdp=null;}
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('dashboardContent').style.display='';
+  document.getElementById('lo').style.display='flex';
+  const name=account.name||email;
+  document.getElementById('userInfo').textContent=userRole==='admin'?name+' (Admin)':userRole==='rdp'?name+' (RDP: '+userRdp+')':name;
+  loadData();
+}
+
+async function signIn(){
+  try{await msalInstance.loginRedirect({scopes:['openid','profile','email']});}
+  catch(e){document.getElementById('loginError').style.display='block';document.getElementById('loginError').textContent='Sign in failed: '+e.message;}
+}
+
+function signOut(){msalInstance.logoutRedirect({postLogoutRedirectUri:window.location.origin+window.location.pathname});}
+
+initAuth();
 const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',GEOCACHE_URL='geocache.json',ASAP_URL='asap-flags.json';
 const GH_REPO='OneOnOneLearning/Needs-Dashboard';
 function getGHToken(){return atob('Z2hw'+'X0dN'+'Wlll'+'TXhM'+'Qzd3'+'WmIw'+'NTM2'+'WU1w'+'VFFt'+'RlFX'+'RGxs'+'ZDFB'+'QjlH'+'Mg==')}
@@ -262,9 +312,11 @@ function loadSample(){
 }
 
 function buildAll(){
+  if(userRole==='rdp'&&userRdp){data=data.filter(d=>d.rdp===userRdp);}
   const p=[...new Set(data.map(d=>d.program))];
   p.forEach((v,i)=>{progColors[v]=pal[i%pal.length]});
   buildCards();buildCharts();buildFilters();renderTable();setTimeout(buildMap,100);
+  if(userRole==='rdp')document.getElementById('filterRDP').style.display='none';
 }
 function getFilteredForCharts(){
   const rdpf=document.getElementById('filterRDP').value,
@@ -287,7 +339,7 @@ function buildCards(){
     fillPct=tp?Math.round((tp-tn)/tp*100):0;
   document.getElementById('summaryCards').innerHTML=
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="cl">Total Tutors Needed</div><div class="cv">${tn}</div><div class="cs">of ${tp} projected</div></div>`+
-    `<div class="card glass" style="cursor:pointer" onclick="document.getElementById('filterUrgent').value='asap';renderTable();this.style.outline='2px solid var(--red)'"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
+    `<div class="card glass" style="cursor:pointer" onclick="const f=document.getElementById('filterUrgent');if(f.value==='asap'){f.value='';this.style.outline=''}else{f.value='asap';this.style.outline='2px solid var(--red)'}onFilterChange()"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="cl">Active Programs</div><div class="cv">${pr.length}</div><div class="cs">${lo.length} schools &middot; ${pcs} PCs</div></div>`+
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${fillPct}%</div><div class="cs">${tp-tn} of ${tp} filled</div></div>`;
 }
@@ -503,7 +555,7 @@ function addMapMarker(d,coords){
   circle.bindPopup(`<strong>${d.school||'Unknown'}</strong><br><span style="color:#666">${d.program}</span><br><strong>${d.needed}</strong> tutor${d.needed>1?'s':''} needed<br><small>${d.subject||''}</small><br><small>${d.location}</small>`);
   mapMarkers.push(circle);
 }
-loadData();
+// loadData called after auth via initAuth
 </script>
 </body>
 </html>
