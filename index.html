@@ -6,8 +6,6 @@
 <title>One on One Learning — Tutor Needs Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <style>
 :root{--bg:#f4f6f9;--surface:rgba(255,255,255,0.55);--surface-hover:rgba(255,255,255,0.75);--border:rgba(255,255,255,0.6);--shadow:0 8px 32px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);--shadow-lg:0 16px 48px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);--text:#1a1f36;--text-dim:#6b7280;--text-light:#9ca3af;--red:#c8232c;--red-dim:rgba(200,35,44,0.08);--green:#2d8a4e;--green-dim:rgba(45,138,78,0.08);--navy:#1a1f36;--blue:#3b6eb5;--blue-dim:rgba(59,110,181,0.08);--amber:#d4930d;--amber-dim:rgba(212,147,13,0.08);--radius:20px;--radius-sm:12px;--blur:blur(20px) saturate(1.5)}
@@ -198,16 +196,6 @@ Sign in with Microsoft</button>
 </div>
 </div>
 </div>
-<div class="fi-a" style="animation-delay:.4s;padding-top:20px">
-<div class="glass" style="padding:24px;border-radius:var(--radius)">
-<h3 style="margin-bottom:16px">Needs Map</h3>
-<div id="needsMap" style="height:500px;border-radius:var(--radius-sm);overflow:hidden"></div>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:.78rem;color:var(--text-dim)">
-<span id="mapStatus">Loading map...</span>
-<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b6eb5;margin-right:4px"></span>1 needed
-<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d4930d;margin:0 4px 0 12px"></span>2 needed
-<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c8232c;margin:0 4px 0 12px"></span>3+ needed</span>
-</div>
 </div>
 </div>
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
@@ -252,7 +240,7 @@ async function signIn(){
 function signOut(){if(msalInstance)msalInstance.logoutRedirect({postLogoutRedirectUri:window.location.origin+window.location.pathname});}
 
 window.addEventListener('DOMContentLoaded',()=>{initAuth();});
-const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',GEOCACHE_URL='geocache.json',ASAP_URL='asap-flags.json',PENDING_URL='pending.json';
+const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',ASAP_URL='asap-flags.json',PENDING_URL='pending.json';
 const GH_REPO='OneOnOneLearning/Needs-Dashboard';
 function getGHToken(){return atob('Z2hw'+'X0dN'+'Wlll'+'TXhM'+'Qzd3'+'WmIw'+'NTM2'+'WU1w'+'VFFt'+'RlFX'+'RGxs'+'ZDFB'+'QjlH'+'Mg==')}
 let data=[],pcMap={},rdpMap={},asapFlags={},pauseFlags={},pendingData=[],sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
@@ -268,7 +256,6 @@ async function loadData(){
   document.getElementById('errorBanner').classList.remove('show');
   try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{const rr=await fetch(RDP_URL+'?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
-  try{const gr=await fetch(GEOCACHE_URL+'?t='+Date.now());if(gr.ok){const gc=await gr.json();Object.assign(geoCache,gc)}}catch(e){}
   try{
     const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/pause-flags.json`,{headers:{'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
     if(pr.ok){const pj=await pr.json();if(pj.content){pauseFlags=JSON.parse(atob(pj.content.replace(/\n/g,'')));}}
@@ -337,7 +324,7 @@ function buildAll(){
   if(userRole==='rdp'&&userRdp){data=data.filter(d=>d.rdp===userRdp);}
   const p=[...new Set(data.map(d=>d.program))];
   p.forEach((v,i)=>{progColors[v]=pal[i%pal.length]});
-  buildCards();buildCharts();buildFilters();renderTable();buildPending();setTimeout(buildMap,100);
+  buildCards();buildCharts();buildFilters();renderTable();buildPending();
   if(userRole==='rdp')document.getElementById('filterRDP').style.display='none';
 }
 function getFilteredForCharts(){
@@ -362,10 +349,9 @@ function buildCards(){
     fillPct=tp?Math.round((tp-tn)/tp*100):0;
   document.getElementById('summaryCards').innerHTML=
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="cl">Total Tutors Needed</div><div class="cv">${tn}</div><div class="cs">of ${tp} projected</div></div>`+
+    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg></div><div class="cl">Pending Contacts</div><div class="cv">${getPendingCount()}</div><div class="cs">interviewed, awaiting contact</div></div>`+
     `<div class="card glass" style="cursor:pointer" onclick="const f=document.getElementById('filterUrgent');if(f.value==='asap'){f.value='';this.style.outline=''}else{f.value='asap';this.style.outline='2px solid var(--red)'}onFilterChange()"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="cl">Active Programs</div><div class="cv">${pr.length}</div><div class="cs">${lo.length} schools &middot; ${pcs} PCs</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${fillPct}%</div><div class="cs">${tp-tn} of ${tp} filled</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg></div><div class="cl">Pending Contacts</div><div class="cv">${getPendingCount()}</div><div class="cs">interviewed, awaiting contact</div></div>`;
+    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="cl">Active Programs</div><div class="cv">${pr.length}</div><div class="cs">${lo.length} schools &middot; ${pcs} PCs</div></div>`;
 }
 
 let chP,chF;
@@ -396,7 +382,7 @@ function buildFilters(){
   rs.innerHTML='<option value="">All RDPs</option>'+rdps.map(r=>`<option value="${r}">${r}</option>`).join('');rs.value=rc;
 }
 document.getElementById('searchInput').addEventListener('input',renderTable);
-function onFilterChange(){buildCards();buildCharts();renderTable();buildPending();buildMap()}
+function onFilterChange(){buildCards();buildCharts();renderTable();buildPending()}
 document.getElementById('filterProgram').addEventListener('change',onFilterChange);
 document.getElementById('filterPC').addEventListener('change',onFilterChange);
 document.getElementById('filterRDP').addEventListener('change',onFilterChange);
@@ -490,102 +476,12 @@ function renderTable(){
   tb.innerHTML=html;
   document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`;
 }
-let needsMap=null,mapMarkers=[],geoCache={},geocoding=false,newGeocodes=0;
-
-function cleanAddr(a){return(a||'').replace(/\\n/g,' ').replace(/\n/g,' ').replace(/[\r\t]/g,' ').replace(/\s+/g,' ').trim()}
-
-async function geocodeAddress(addr){
-  const clean=cleanAddr(addr);
-  if(!clean||clean.length<5)return null;
-  if(geoCache[clean]&&geoCache[clean]!=='miss')return geoCache[clean];
-  if(geoCache[clean]==='miss')return null;
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(clean)}`,{headers:{'User-Agent':'OOOLDashboard/1.0'}});
-    const j=await r.json();
-    if(j&&j.length>0){const c=[parseFloat(j[0].lat),parseFloat(j[0].lon)];geoCache[clean]=c;newGeocodes++;return c;}
-    const parts=clean.split(',');
-    if(parts.length>=2){
-      const short=parts.slice(-2).join(',').trim();
-      const r2=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(short)}`,{headers:{'User-Agent':'OOOLDashboard/1.0'}});
-      const j2=await r2.json();
-      if(j2&&j2.length>0){const c=[parseFloat(j2[0].lat),parseFloat(j2[0].lon)];geoCache[clean]=c;newGeocodes++;return c;}
-    }
-    geoCache[clean]='miss';return null;
-  }catch(e){return null;}
-}
-
-async function saveGeocache(){}
-
-async function buildMap(){
-  const fd=getFilteredForCharts();
-  const rows=fd.filter(d=>d.needed>0&&d.location);
-  if(!needsMap){
-    needsMap=L.map('needsMap').setView([37.5,-96],4);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-      attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:18
-    }).addTo(needsMap);
-  }
-  mapMarkers.forEach(m=>needsMap.removeLayer(m));
-  mapMarkers=[];
-  if(rows.length===0){document.getElementById('mapStatus').textContent='No locations with needs';return;}
-  const mapStatus=document.getElementById('mapStatus');
-  const bounds=[];
-  let placed=0,uncached=[];
-  rows.forEach(d=>{
-    const loc=cleanAddr(d.location);
-    if(!loc||loc.length<5||loc.toLowerCase()==='all schools'||loc.toLowerCase().includes('substitute'))return;
-    const cached=geoCache[loc];
-    if(cached&&cached!=='miss'&&Array.isArray(cached)){
-      addMapMarker(d,cached);bounds.push(cached);placed++;
-    }else if(!cached){
-      uncached.push({d,loc});
-    }
-  });
-  if(mapStatus)mapStatus.textContent=placed>0?`${placed} locations mapped`+(uncached.length>0?`, geocoding ${uncached.length} new...`:''):`Geocoding ${uncached.length} locations...`;
-  if(bounds.length>1)needsMap.fitBounds(bounds,{padding:[30,30]});
-  else if(bounds.length===1)needsMap.setView(bounds[0],10);
-  if(uncached.length>0){
-    if(mapStatus)mapStatus.textContent=`${placed} locations mapped (${uncached.length} not in geocache)`;
-  }
-}
-
-async function toggleAsap(idx){
-  const d=data[idx];if(!d)return;
-  const key=getRowKey(d);
-  if(asapFlags[key])delete asapFlags[key];else asapFlags[key]=true;
-  buildCards();buildCharts();renderTable();buildMap();
-  saveAsapFlags();
-}
-let asapSha='';
-async function saveAsapFlags(){
-  const tk=getGHToken();
-  try{
-    const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
-    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';}
-    const body={message:'Update ASAP flags',content:btoa(unescape(encodeURIComponent(JSON.stringify(asapFlags,null,2))))};
-    if(asapSha)body.sha=asapSha;
-    const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{
-      method:'PUT',headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
-      body:JSON.stringify(body)
-    });
-    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';}
-  }catch(e){console.log('ASAP save error:',e)}
-}
-function addMapMarker(d,coords){
-  const r=Math.max(8,Math.min(25,d.needed*6));
-  const color=d.needed>=3?'#c8232c':d.needed>=2?'#d4930d':'#3b6eb5';
-  const circle=L.circleMarker(coords,{
-    radius:r,fillColor:color,color:color,weight:1.5,opacity:.9,fillOpacity:.3
-  }).addTo(needsMap);
-  circle.bindPopup(`<strong>${d.school||'Unknown'}</strong><br><span style="color:#666">${d.program}</span><br><strong>${d.needed}</strong> tutor${d.needed>1?'s':''} needed<br><small>${d.subject||''}</small><br><small>${d.location}</small>`);
-  mapMarkers.push(circle);
-}
 
 async function togglePause(idx){
   const d=data[idx];
   const key=getRowKey(d);
   if(pauseFlags[key])delete pauseFlags[key];else pauseFlags[key]=true;
-  buildCards();buildCharts();renderTable();buildPending();buildMap();
+  buildCards();buildCharts();renderTable();buildPending();
   savePauseFlags();
 }
 
