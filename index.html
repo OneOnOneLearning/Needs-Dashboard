@@ -213,15 +213,15 @@ Sign in with Microsoft</button>
 <div class="ft">One on One Learning &middot; Tutor Needs Dashboard &middot; Data refreshed daily via Power Automate</div>
 </div>
 <script>
-const msalConfig={auth:{clientId:'f3d0a7b8-0eee-456f-9758-da7bc1296a94',authority:'https://login.microsoftonline.com/24ab4d38-cbff-431e-b383-3bd64b05be87',redirectUri:window.location.origin+window.location.pathname},cache:{cacheLocation:'sessionStorage'}};
-const msalInstance=new msal.PublicClientApplication(msalConfig);
-let currentUser=null,userRole=null,userRdp=null;
+let msalInstance=null,currentUser=null,userRole=null,userRdp=null;
 
 const adminEmails=['msuarez@oneononelearning.com','igrande@oneononelearning.com','rmatos@oneononelearning.com','jfuentes@oneononelearning.com','nreaser@oneononelearning.com','mmonnar@oneononelearning.com','arau@oneononelearning.com'];
 const rdpEmails={'kberry@oneononelearning.com':'Karin','jlove@oneononelearning.com':'Jennifer','mhill@oneononelearning.com':'Malorie','llandera@oneononelearning.com':'Malorie'};
 
 async function initAuth(){
   try{
+    if(typeof msal==='undefined'){console.log('MSAL not loaded');return;}
+    msalInstance=new msal.PublicClientApplication({auth:{clientId:'f3d0a7b8-0eee-456f-9758-da7bc1296a94',authority:'https://login.microsoftonline.com/24ab4d38-cbff-431e-b383-3bd64b05be87',redirectUri:window.location.origin+window.location.pathname},cache:{cacheLocation:'sessionStorage'}});
     const resp=await msalInstance.handleRedirectPromise();
     if(resp){handleLoginSuccess(resp.account);return;}
     const accounts=msalInstance.getAllAccounts();
@@ -244,13 +244,14 @@ function handleLoginSuccess(account){
 }
 
 async function signIn(){
+  if(!msalInstance){await initAuth();}
   try{await msalInstance.loginRedirect({scopes:['openid','profile','email']});}
   catch(e){document.getElementById('loginError').style.display='block';document.getElementById('loginError').textContent='Sign in failed: '+e.message;}
 }
 
-function signOut(){msalInstance.logoutRedirect({postLogoutRedirectUri:window.location.origin+window.location.pathname});}
+function signOut(){if(msalInstance)msalInstance.logoutRedirect({postLogoutRedirectUri:window.location.origin+window.location.pathname});}
 
-initAuth();
+window.addEventListener('DOMContentLoaded',()=>{initAuth();});
 const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',GEOCACHE_URL='geocache.json',ASAP_URL='asap-flags.json',PENDING_URL='pending.json';
 const GH_REPO='OneOnOneLearning/Needs-Dashboard';
 function getGHToken(){return atob('Z2hw'+'X0dN'+'Wlll'+'TXhM'+'Qzd3'+'WmIw'+'NTM2'+'WU1w'+'VFFt'+'RlFX'+'RGxs'+'ZDFB'+'QjlH'+'Mg==')}
