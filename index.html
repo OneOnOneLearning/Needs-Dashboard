@@ -183,6 +183,21 @@ Sign in with Microsoft</button>
 <div class="tw"><table><thead><tr id="tableHead"></tr></thead><tbody id="tableBody"></tbody></table></div>
 <div class="rc" id="rowCount"></div>
 </div></div>
+<div class="fi-a" style="animation-delay:.35s;padding-top:20px">
+<div class="glass" style="padding:24px;border-radius:var(--radius)">
+<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="document.getElementById('pendingBody').style.display=document.getElementById('pendingBody').style.display==='none'?'':'none';this.querySelector('.pc-arrow').textContent=document.getElementById('pendingBody').style.display==='none'?'▶':'▼'">
+<h3>Pending Contacts <span id="pendingCount" style="background:var(--amber-dim);color:var(--amber);padding:2px 10px;border-radius:100px;font-size:.8rem;margin-left:8px">0</span></h3>
+<span class="pc-arrow" style="color:var(--text-dim);font-size:.8rem">▼</span>
+</div>
+<div id="pendingBody" style="margin-top:16px">
+<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.85rem">
+<thead><tr style="border-bottom:2px solid rgba(0,0,0,.06)"><th style="text-align:left;padding:8px 12px;color:var(--text-dim);font-weight:500">Program</th><th style="text-align:center;padding:8px 12px;color:var(--text-dim);font-weight:500">Pending</th></tr></thead>
+<tbody id="pendingTableBody"></tbody>
+</table></div>
+<p id="pendingEmpty" style="color:var(--text-light);font-size:.85rem;text-align:center;padding:20px;display:none">No pending contacts</p>
+</div>
+</div>
+</div>
 <div class="fi-a" style="animation-delay:.4s;padding-top:20px">
 <div class="glass" style="padding:24px;border-radius:var(--radius)">
 <h3 style="margin-bottom:16px">Needs Map</h3>
@@ -236,15 +251,16 @@ async function signIn(){
 function signOut(){msalInstance.logoutRedirect({postLogoutRedirectUri:window.location.origin+window.location.pathname});}
 
 initAuth();
-const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',GEOCACHE_URL='geocache.json',ASAP_URL='asap-flags.json';
+const DATA_URL='data.json',PCS_URL='pcs.json',RDP_URL='rdps.json',GEOCACHE_URL='geocache.json',ASAP_URL='asap-flags.json',PENDING_URL='pending.json';
 const GH_REPO='OneOnOneLearning/Needs-Dashboard';
 function getGHToken(){return atob('Z2hw'+'X0dN'+'Wlll'+'TXhM'+'Qzd3'+'WmIw'+'NTM2'+'WU1w'+'VFFt'+'RlFX'+'RGxs'+'ZDFB'+'QjlH'+'Mg==')}
-let data=[],pcMap={},rdpMap={},asapFlags={},sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
+let data=[],pcMap={},rdpMap={},asapFlags={},pauseFlags={},pendingData=[],sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
 const progColors={},pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
 
 function xlDate(v){if(!v||v==='')return'';const s=String(v).trim();if(s.toLowerCase()==='asap')return'ASAP';if(/^\d{4,5}$/.test(s)){const d=new Date((parseInt(s)-25569)*86400000);return d.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'})}return s}
 function getRowKey(d){return(d.program+'|'+d.school+'|'+d.location).replace(/\s+/g,' ').trim()}
 function isUrgent(d){return !!asapFlags[getRowKey(d)]}
+function isPaused(d){return !!pauseFlags[getRowKey(d)]}
 function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');expandedRows.clear();renderTable()}
 
 async function loadData(){
@@ -252,6 +268,11 @@ async function loadData(){
   try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{const rr=await fetch(RDP_URL+'?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
   try{const gr=await fetch(GEOCACHE_URL+'?t='+Date.now());if(gr.ok){const gc=await gr.json();Object.assign(geoCache,gc)}}catch(e){}
+  try{
+    const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/pause-flags.json`,{headers:{'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
+    if(pr.ok){const pj=await pr.json();if(pj.content){pauseFlags=JSON.parse(atob(pj.content.replace(/\n/g,'')));}}
+  }catch(e){pauseFlags={}}
+  try{const pd=await fetch(PENDING_URL+'?t='+Date.now());if(pd.ok)pendingData=await pd.json()}catch(e){pendingData=[]}
   try{
     const ar=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
     if(ar.ok){const aj=await ar.json();if(aj.content){asapFlags=JSON.parse(atob(aj.content.replace(/\n/g,'')));}}
@@ -315,7 +336,7 @@ function buildAll(){
   if(userRole==='rdp'&&userRdp){data=data.filter(d=>d.rdp===userRdp);}
   const p=[...new Set(data.map(d=>d.program))];
   p.forEach((v,i)=>{progColors[v]=pal[i%pal.length]});
-  buildCards();buildCharts();buildFilters();renderTable();setTimeout(buildMap,100);
+  buildCards();buildCharts();buildFilters();renderTable();buildPending();setTimeout(buildMap,100);
   if(userRole==='rdp')document.getElementById('filterRDP').style.display='none';
 }
 function getFilteredForCharts(){
@@ -323,6 +344,7 @@ function getFilteredForCharts(){
     pf=document.getElementById('filterProgram').value,
     pcf=document.getElementById('filterPC').value;
   return data.filter(d=>{
+    if(isPaused(d))return false;
     if(rdpf&&d.rdp!==rdpf)return false;
     if(pf&&d.program!==pf)return false;
     if(pcf&&d.pc!==pcf)return false;
@@ -341,7 +363,8 @@ function buildCards(){
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="cl">Total Tutors Needed</div><div class="cv">${tn}</div><div class="cs">of ${tp} projected</div></div>`+
     `<div class="card glass" style="cursor:pointer" onclick="const f=document.getElementById('filterUrgent');if(f.value==='asap'){f.value='';this.style.outline=''}else{f.value='asap';this.style.outline='2px solid var(--red)'}onFilterChange()"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="cl">ASAP Positions</div><div class="cv">${urgCnt}</div><div class="cs">need immediate placement</div></div>`+
     `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="cl">Active Programs</div><div class="cv">${pr.length}</div><div class="cs">${lo.length} schools &middot; ${pcs} PCs</div></div>`+
-    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${fillPct}%</div><div class="cs">${tp-tn} of ${tp} filled</div></div>`;
+    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="cl">Fill Rate</div><div class="cv">${fillPct}%</div><div class="cs">${tp-tn} of ${tp} filled</div></div>`+
+    `<div class="card glass"><div class="ci"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg></div><div class="cl">Pending Contacts</div><div class="cv">${getPendingCount()}</div><div class="cs">interviewed, awaiting contact</div></div>`;
 }
 
 let chP,chF;
@@ -372,7 +395,7 @@ function buildFilters(){
   rs.innerHTML='<option value="">All RDPs</option>'+rdps.map(r=>`<option value="${r}">${r}</option>`).join('');rs.value=rc;
 }
 document.getElementById('searchInput').addEventListener('input',renderTable);
-function onFilterChange(){buildCards();buildCharts();renderTable();buildMap()}
+function onFilterChange(){buildCards();buildCharts();renderTable();buildPending();buildMap()}
 document.getElementById('filterProgram').addEventListener('change',onFilterChange);
 document.getElementById('filterPC').addEventListener('change',onFilterChange);
 document.getElementById('filterRDP').addEventListener('change',onFilterChange);
@@ -394,8 +417,8 @@ function fmtSched(d){
 function fmtCert(v){if(!v)return'<span class="cert-n">—</span>';const s=v.toString().toLowerCase();if(s==='yes'||s==='y')return'<span class="cert-y">Yes</span>';if(s==='no'||s==='n')return'<span class="cert-n">No</span>';return`<span class="cert-n">${v}</span>`}
 function fmtStart(d){if(isUrgent(d))return'<span class="urgent-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>ASAP</span>';return d.startDate||'—'}
 
-const compactCols=[{key:'asap',label:'⚠️'},{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
-const fullCols=[{key:'asap',label:'⚠️'},{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
+const compactCols=[{key:'asap',label:'⚠️'},{key:'pause',label:'⏸'},{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start/End'},{key:'payRate',label:'Pay'},{key:'expand',label:''}];
+const fullCols=[{key:'asap',label:'⚠️'},{key:'pause',label:'⏸'},{key:'program',label:'Program'},{key:'rdp',label:'RDP'},{key:'pc',label:'PC'},{key:'school',label:'School'},{key:'location',label:'Location'},{key:'dateRequested',label:'Date Req'},{key:'projected',label:'Proj'},{key:'needed',label:'# Need'},{key:'subject',label:'Subject'},{key:'mode',label:'Mode'},{key:'schedule',label:'Schedule'},{key:'startDate',label:'Start/End'},{key:'payRate',label:'Pay'},{key:'certified',label:'Cert'},{key:'nonNeg',label:'Non-Negotiables'},{key:'notes',label:'Notes'}];
 function getCols(){return viewMode==='compact'?compactCols:fullCols}
 
 function buildTableHead(){document.getElementById('tableHead').innerHTML=getCols().map(c=>{if(c.key==='expand'||c.key==='schedule')return`<th>${c.label}</th>`;if(c.key==='asap')return`<th style="text-align:center;width:50px">${c.label}</th>`;return`<th class="${sortCol===c.key?'sorted':''}" onclick="sortTable('${c.key}')">${c.label}<span class="sa">${sortCol===c.key?(sortAsc?'▲':'▼'):'⇅'}</span></th>`}).join('')}
@@ -429,9 +452,10 @@ function renderTable(){
       mc=d.mode.toLowerCase().includes('virtual')?'m-v':'m-ip',
       c=progColors[d.program]||'#c8232c',urg=isUrgent(d),
       ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`,
-      asapBtn=`<td style="text-align:center"><button onclick="toggleAsap(${di})" style="background:${urg?'var(--red)':'transparent'};color:${urg?'white':'var(--text-light)'};border:1px solid ${urg?'var(--red)':'rgba(0,0,0,.12)'};border-radius:100px;padding:3px 8px;font-size:.7rem;cursor:pointer;font-weight:600;transition:all .2s">${urg?'ASAP':'—'}</button></td>`;
+      const paused=isPaused(d);
+      asapBtn=`<td style="text-align:center">${userRole==='admin'?`<button onclick="toggleAsap(${di})" style="background:${urg?'var(--red)':'transparent'};color:${urg?'white':'var(--text-light)'};border:1px solid ${urg?'var(--red)':'rgba(0,0,0,.12)'};border-radius:100px;padding:3px 8px;font-size:.7rem;cursor:pointer;font-weight:600;transition:all .2s">${urg?'ASAP':'—'}</button>`:urg?'<span style="color:var(--red);font-weight:600;font-size:.7rem">ASAP</span>':'—'}</td><td style="text-align:center">${userRole==='admin'?`<button onclick="togglePause(${di})" style="background:${paused?'var(--text-dim)':'transparent'};color:${paused?'white':'var(--text-light)'};border:1px solid ${paused?'var(--text-dim)':'rgba(0,0,0,.12)'};border-radius:100px;padding:3px 8px;font-size:.7rem;cursor:pointer;font-weight:600;transition:all .2s">${paused?'PAUSED':'—'}</button>`:paused?'<span style="color:var(--text-dim);font-weight:600;font-size:.7rem">PAUSED</span>':'—'}</td>`;
     if(viewMode==='compact'){
-      html+=`<tr${urg?' class="urgent-row"':''}>`;
+      html+=`<tr${urg?' class="urgent-row"':''}${paused?' style="opacity:.4"':''}>`;
       html+=asapBtn;
       html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
@@ -450,7 +474,7 @@ function renderTable(){
         html+=`</div></td></tr>`;
       }
     }else{
-      html+=`<tr${urg?' class="urgent-row"':''}>`; 
+      html+=`<tr${urg?' class="urgent-row"':''}${paused?' style="opacity:.4"':''}>`; 
       html+=asapBtn;
       html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
@@ -555,6 +579,60 @@ function addMapMarker(d,coords){
   circle.bindPopup(`<strong>${d.school||'Unknown'}</strong><br><span style="color:#666">${d.program}</span><br><strong>${d.needed}</strong> tutor${d.needed>1?'s':''} needed<br><small>${d.subject||''}</small><br><small>${d.location}</small>`);
   mapMarkers.push(circle);
 }
+
+async function togglePause(idx){
+  const d=data[idx];
+  const key=getRowKey(d);
+  if(pauseFlags[key])delete pauseFlags[key];else pauseFlags[key]=true;
+  buildCards();buildCharts();renderTable();buildPending();buildMap();
+  savePauseFlags();
+}
+
+let pauseSha='';
+async function savePauseFlags(){
+  const tk=getGHToken();
+  try{
+    const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/pause-flags.json`,{headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
+    if(gr.ok){const gj=await gr.json();pauseSha=gj.sha||'';}
+    const body={message:'Update pause flags',content:btoa(unescape(encodeURIComponent(JSON.stringify(pauseFlags,null,2))))};
+    if(pauseSha)body.sha=pauseSha;
+    const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/pause-flags.json`,{
+      method:'PUT',headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
+      body:JSON.stringify(body)
+    });
+    if(pr.ok){const pj=await pr.json();pauseSha=pj.content?.sha||'';}
+  }catch(e){console.log('Pause save error:',e)}
+}
+
+function getPendingCount(){
+  const rdpf=document.getElementById('filterRDP')?.value||'';
+  const pf=document.getElementById('filterProgram')?.value||'';
+  let filtered=pendingData;
+  if(rdpf)filtered=filtered.filter(p=>rdpMap[p.program]===rdpf);
+  if(pf)filtered=filtered.filter(p=>p.program===pf);
+  if(userRole==='rdp'&&userRdp)filtered=filtered.filter(p=>rdpMap[p.program]===userRdp);
+  return filtered.length;
+}
+
+function buildPending(){
+  const rdpf=document.getElementById('filterRDP')?.value||'';
+  const pf=document.getElementById('filterProgram')?.value||'';
+  let filtered=pendingData;
+  if(rdpf)filtered=filtered.filter(p=>rdpMap[p.program]===rdpf);
+  if(pf)filtered=filtered.filter(p=>p.program===pf);
+  if(userRole==='rdp'&&userRdp)filtered=filtered.filter(p=>rdpMap[p.program]===userRdp);
+  const grouped={};
+  filtered.forEach(p=>{grouped[p.program]=(grouped[p.program]||0)+1});
+  const entries=Object.entries(grouped).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,e)=>s+e[1],0);
+  document.getElementById('pendingCount').textContent=total;
+  const tb=document.getElementById('pendingTableBody');
+  const empty=document.getElementById('pendingEmpty');
+  if(entries.length===0){tb.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tb.innerHTML=entries.map(([prog,cnt])=>`<tr style="border-bottom:1px solid rgba(0,0,0,.04)"><td style="padding:8px 12px">${prog}</td><td style="text-align:center;padding:8px 12px"><span style="background:var(--amber-dim);color:var(--amber);padding:2px 10px;border-radius:100px;font-weight:600;font-size:.85rem">${cnt}</span></td></tr>`).join('');
+}
+
 // loadData called after auth via initAuth
 </script>
 </body>
