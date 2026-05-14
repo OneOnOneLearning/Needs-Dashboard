@@ -453,7 +453,7 @@ function renderTable(){
       mc=d.mode.toLowerCase().includes('virtual')?'m-v':'m-ip',
       c=progColors[d.program]||'#c8232c',urg=isUrgent(d),
       ptag=d.fileUrl?`<a href="${d.fileUrl}" target="_blank" class="pt" style="background:${c}11;color:${c}">${d.program}</a>`:`<span class="pt" style="background:${c}11;color:${c}">${d.program}</span>`,
-      const paused=isPaused(d);
+      paused=isPaused(d),
       asapBtn=`<td style="text-align:center">${userRole==='admin'?`<button onclick="toggleAsap(${di})" style="background:${urg?'var(--red)':'transparent'};color:${urg?'white':'var(--text-light)'};border:1px solid ${urg?'var(--red)':'rgba(0,0,0,.12)'};border-radius:100px;padding:3px 8px;font-size:.7rem;cursor:pointer;font-weight:600;transition:all .2s">${urg?'ASAP':'—'}</button>`:urg?'<span style="color:var(--red);font-weight:600;font-size:.7rem">ASAP</span>':'—'}</td><td style="text-align:center">${userRole==='admin'?`<button onclick="togglePause(${di})" style="background:${paused?'var(--text-dim)':'transparent'};color:${paused?'white':'var(--text-light)'};border:1px solid ${paused?'var(--text-dim)':'rgba(0,0,0,.12)'};border-radius:100px;padding:3px 8px;font-size:.7rem;cursor:pointer;font-weight:600;transition:all .2s">${paused?'PAUSED':'—'}</button>`:paused?'<span style="color:var(--text-dim);font-weight:600;font-size:.7rem">PAUSED</span>':'—'}</td>`;
     if(viewMode==='compact'){
       html+=`<tr${urg?' class="urgent-row"':''}${paused?' style="opacity:.4"':''}>`;
