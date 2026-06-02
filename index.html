@@ -477,6 +477,30 @@ function renderTable(){
   document.getElementById('rowCount').textContent=`Showing ${f.length} of ${data.length} positions`;
 }
 
+async function toggleAsap(idx){
+  const d=data[idx];
+  const key=getRowKey(d);
+  if(asapFlags[key])delete asapFlags[key];else asapFlags[key]=true;
+  buildCards();buildCharts();renderTable();buildPending();
+  saveAsapFlags();
+}
+
+let asapSha='';
+async function saveAsapFlags(){
+  const tk=getGHToken();
+  try{
+    const gr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
+    if(gr.ok){const gj=await gr.json();asapSha=gj.sha||'';}
+    const body={message:'Update ASAP flags',content:btoa(unescape(encodeURIComponent(JSON.stringify(asapFlags,null,2))))};
+    if(asapSha)body.sha=asapSha;
+    const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{
+      method:'PUT',headers:{'Authorization':'Bearer '+tk,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json','User-Agent':'OOOLDashboard'},
+      body:JSON.stringify(body)
+    });
+    if(pr.ok){const pj=await pr.json();asapSha=pj.content?.sha||'';}
+  }catch(e){console.log('ASAP save error:',e)}
+}
+
 async function togglePause(idx){
   const d=data[idx];
   const key=getRowKey(d);
