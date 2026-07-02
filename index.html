@@ -269,6 +269,7 @@ async function loadData(){
     const r=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/data.json?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
     let raw=await r.text();raw=raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/\t/g,' ');
     raw=raw.replace(/"(needed|projected)"\s*:\s*([^,}"\]]*)/g,(m,key,val)=>{const t=val.trim();const n=Number(t);return`"${key}":${(t===''||isNaN(n))?0:n}`});
+    raw=raw.replace(/:""([^"]*)""/g,':"$1"');
     const j=JSON.parse(raw);
     if(Array.isArray(j))data=j;else if(j.records){data=j.records;if(j.updated)document.getElementById('lastUpdated').textContent=j.updated}
     else throw new Error('Bad format');
