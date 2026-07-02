@@ -254,19 +254,19 @@ function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=
 
 async function loadData(){
   document.getElementById('errorBanner').classList.remove('show');
-  try{const pr=await fetch(PCS_URL+'?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
-  try{const rr=await fetch(RDP_URL+'?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
+  try{const pr=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/pcs.json?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
+  try{const rr=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/rdps.json?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
   try{
     const pr=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/pause-flags.json`,{headers:{'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
     if(pr.ok){const pj=await pr.json();if(pj.content){pauseFlags=JSON.parse(atob(pj.content.replace(/\n/g,'')));}}
   }catch(e){pauseFlags={}}
-  try{const pd=await fetch(PENDING_URL+'?t='+Date.now());if(pd.ok)pendingData=await pd.json()}catch(e){pendingData=[]}
+  try{const pd=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/pending.json?t='+Date.now());if(pd.ok)pendingData=await pd.json()}catch(e){pendingData=[]}
   try{
     const ar=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/asap-flags.json`,{headers:{'Accept':'application/vnd.github.v3+json','User-Agent':'OOOLDashboard'}});
     if(ar.ok){const aj=await ar.json();if(aj.content){asapFlags=JSON.parse(atob(aj.content.replace(/\n/g,'')));}}
   }catch(e){asapFlags={}}
   try{
-    const r=await fetch(DATA_URL+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
+    const r=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/data.json?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);
     let raw=await r.text();raw=raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/\t/g,' ');
     raw=raw.replace(/"(needed|projected)"\s*:\s*([^,}"\]]*)/g,(m,key,val)=>{const t=val.trim();const n=Number(t);return`"${key}":${(t===''||isNaN(n))?0:n}`});
     const j=JSON.parse(raw);
