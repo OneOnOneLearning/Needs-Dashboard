@@ -122,8 +122,6 @@ a.pt:hover{opacity:.7}
 .rc{font-size:.78rem;color:var(--text-light);padding:12px 28px 18px;text-align:right}
 .eb{margin-top:16px;padding:14px 18px;background:var(--red-dim);border:1px solid rgba(200,35,44,.12);border-radius:var(--radius-sm);color:var(--red);font-size:.84rem;display:none}
 .eb.show{display:flex;align-items:center;gap:10px}
-.wb{margin-top:16px;padding:14px 18px;background:var(--amber-dim);border:1px solid rgba(212,147,13,.18);border-radius:var(--radius-sm);color:#8a5f06;font-size:.84rem;display:none}
-.wb.show{display:flex;align-items:center;gap:10px}
 .ft{text-align:center;padding:16px 0 40px;color:var(--text-light);font-size:.72rem;letter-spacing:.03em}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}
 .fi-a{animation:fadeIn .6s ease forwards;opacity:0}
@@ -157,7 +155,6 @@ Sign in with Microsoft</button>
 </div>
 </div>
 <div class="eb" id="errorBanner"><span id="errorMsg"></span></div>
-<div class="wb" id="warnBanner"><span id="warnMsg"></span></div>
 <div class="cards fi-a" style="animation-delay:.1s" id="summaryCards"></div>
 <div class="charts fi-a" style="animation-delay:.2s">
 <div class="cb glass"><h3>Tutors Needed by Program</h3><div class="cc"><canvas id="chartProgram"></canvas></div></div>
@@ -278,7 +275,6 @@ function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=
 
 async function loadData(){
   document.getElementById('errorBanner').classList.remove('show');
-  document.getElementById('warnBanner').classList.remove('show');
   try{const pr=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/pcs.json?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{const rr=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/rdps.json?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
   try{
@@ -301,9 +297,6 @@ async function loadData(){
     }catch(parseErr){
       const rep=repairStrayQuotes(raw);
       j=JSON.parse(rep.text);
-      const wb=document.getElementById('warnBanner');
-      document.getElementById('warnMsg').innerHTML='Data loaded, but '+rep.fixed+' stray quote mark'+(rep.fixed===1?'':'s')+' had to be repaired. Check recent spreadsheet edits for cells containing &quot; characters.';
-      wb.classList.add('show');
       console.warn('data.json repaired:',rep.fixed,'stray quote(s).',parseErr.message);
     }
     if(Array.isArray(j))data=j;else if(j.records){data=j.records;if(j.updated)document.getElementById('lastUpdated').textContent=j.updated}
