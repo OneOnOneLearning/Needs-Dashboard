@@ -34,6 +34,7 @@ body::after{width:600px;height:600px;bottom:-150px;left:-150px;background:radial
 .bdg-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .bdg-d{background:rgba(0,0,0,.04);color:var(--text-dim)}
+.bdg-warn{background:var(--amber-dim);color:var(--amber)}
 .rbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:100px;border:1px solid rgba(0,0,0,.08);background:var(--surface);backdrop-filter:var(--blur);color:var(--text-dim);font-family:inherit;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s}
 .rbtn:hover{background:var(--surface-hover);color:var(--red);border-color:rgba(200,35,44,.2)}
 .rbtn svg{width:13px;height:13px}
@@ -121,6 +122,8 @@ a.pt:hover{opacity:.7}
 .rc{font-size:.78rem;color:var(--text-light);padding:12px 28px 18px;text-align:right}
 .eb{margin-top:16px;padding:14px 18px;background:var(--red-dim);border:1px solid rgba(200,35,44,.12);border-radius:var(--radius-sm);color:var(--red);font-size:.84rem;display:none}
 .eb.show{display:flex;align-items:center;gap:10px}
+.wb{margin-top:16px;padding:14px 18px;background:var(--amber-dim);border:1px solid rgba(212,147,13,.18);border-radius:var(--radius-sm);color:#8a5f06;font-size:.84rem;display:none}
+.wb.show{display:flex;align-items:center;gap:10px}
 .ft{text-align:center;padding:16px 0 40px;color:var(--text-light);font-size:.72rem;letter-spacing:.03em}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}
 .fi-a{animation:fadeIn .6s ease forwards;opacity:0}
@@ -154,6 +157,7 @@ Sign in with Microsoft</button>
 </div>
 </div>
 <div class="eb" id="errorBanner"><span id="errorMsg"></span></div>
+<div class="wb" id="warnBanner"><span id="warnMsg"></span></div>
 <div class="cards fi-a" style="animation-delay:.1s" id="summaryCards"></div>
 <div class="charts fi-a" style="animation-delay:.2s">
 <div class="cb glass"><h3>Tutors Needed by Program</h3><div class="cc"><canvas id="chartProgram"></canvas></div></div>
@@ -246,6 +250,26 @@ function getGHToken(){return atob('Z2hw'+'X2Za'+'eGZo'+'UHpq'+'UnJG'+'Uzd1'+'cXl
 let data=[],pcMap={},rdpMap={},asapFlags={},pauseFlags={},pendingData=[],sortCol=null,sortAsc=true,viewMode='full',expandedRows=new Set();
 const progColors={},pal=['#c8232c','#2d8a4e','#3b6eb5','#d4930d','#8b5cf6','#0891b2','#dc2626','#059669','#7c3aed','#ca8a04','#2563eb','#e11d48','#16a34a','#9333ea','#ea580c','#0284c7'];
 
+/* Repairs stray double-quote marks typed inside spreadsheet cells.
+   Only runs when the normal JSON.parse fails. Walks the text and escapes any
+   quote that sits inside a value instead of ending one. */
+function repairStrayQuotes(s){
+  const KEYS='program|location|school|dateRequested|projected|needed|subject|mode|mon|tues|wed|thurs|friday|weekends|startDate|payRate|certified|nonNeg|notes|fileUrl|updated|records';
+  const closer=new RegExp('^(?::|,"(?:'+KEYS+')":|\\}|\\]|,\\{)');
+  let out='',p=0,inStr=false,fixed=0;
+  while(p<s.length){
+    const ch=s[p];
+    if(!inStr){out+=ch;if(ch==='"')inStr=true;p++;continue}
+    if(ch==='\\'){out+=s.substr(p,2);p+=2;continue}
+    if(ch==='"'){
+      if(closer.test(s.substr(p+1,40))){out+=ch;inStr=false;p++;continue}
+      out+='\\"';fixed++;p++;continue
+    }
+    out+=ch;p++;
+  }
+  return{text:out,fixed:fixed}
+}
+
 function xlDate(v){if(!v||v==='')return'';const s=String(v).trim();if(s.toLowerCase()==='asap')return'ASAP';if(/^\d{4,5}$/.test(s)){const d=new Date((parseInt(s)-25569)*86400000);return d.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'})}return s}
 function getRowKey(d){return(d.program+'|'+d.school+'|'+d.location).replace(/\s+/g,' ').trim()}
 function isUrgent(d){return !!asapFlags[getRowKey(d)]}
@@ -254,6 +278,7 @@ function setView(m,b){viewMode=m;document.querySelectorAll('.vt-btn').forEach(x=
 
 async function loadData(){
   document.getElementById('errorBanner').classList.remove('show');
+  document.getElementById('warnBanner').classList.remove('show');
   try{const pr=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/pcs.json?t='+Date.now());if(pr.ok)pcMap=await pr.json()}catch(e){pcMap=samplePCs()}
   try{const rr=await fetch('https://raw.githubusercontent.com/OneOnOneLearning/Needs-Dashboard/main/rdps.json?t='+Date.now());if(rr.ok)rdpMap=await rr.json()}catch(e){rdpMap={}}
   try{
@@ -270,7 +295,17 @@ async function loadData(){
     let raw=await r.text();raw=raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/\t/g,' ');
     raw=raw.replace(/"(needed|projected)"\s*:\s*([^,}"\]]*)/g,(m,key,val)=>{const t=val.trim();const n=Number(t);return`"${key}":${(t===''||isNaN(n))?0:n}`});
     raw=raw.replace(/:""([^"]*)""/g,':"$1"');
-    const j=JSON.parse(raw);
+    let j;
+    try{
+      j=JSON.parse(raw);
+    }catch(parseErr){
+      const rep=repairStrayQuotes(raw);
+      j=JSON.parse(rep.text);
+      const wb=document.getElementById('warnBanner');
+      document.getElementById('warnMsg').innerHTML='Data loaded, but '+rep.fixed+' stray quote mark'+(rep.fixed===1?'':'s')+' had to be repaired. Check recent spreadsheet edits for cells containing &quot; characters.';
+      wb.classList.add('show');
+      console.warn('data.json repaired:',rep.fixed,'stray quote(s).',parseErr.message);
+    }
     if(Array.isArray(j))data=j;else if(j.records){data=j.records;if(j.updated)document.getElementById('lastUpdated').textContent=j.updated}
     else throw new Error('Bad format');
     data=data.map(d=>({
@@ -462,7 +497,7 @@ function renderTable(){
         html+=`</div></td></tr>`;
       }
     }else{
-      html+=`<tr${urg?' class="urgent-row"':''}${paused?' style="opacity:.4"':''}>`; 
+      html+=`<tr${urg?' class="urgent-row"':''}${paused?' style="opacity:.4"':''}>`;
       html+=asapBtn;
       html+=`<td>${ptag}</td><td class="pc-cell">${d.rdp||'—'}</td><td class="pc-cell">${d.pc||'—'}</td>`;
       html+=`<td style="font-weight:500">${d.school||'—'}</td><td>${d.location||'—'}</td>`;
